@@ -7,9 +7,11 @@
 //#include <helper_cuda.h>
 //#include <helper_functions.h>
 #include "cuda_utils.hpp"
+#include <cassert>
 
 //Return commands
 #define SUCCESS 0
 #define UNDEFINED_PARAMS 1
+#define INVALID_DATA_ADDITION 1
 #define ERROR 255
 #endif

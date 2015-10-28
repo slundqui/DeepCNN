@@ -13,21 +13,32 @@
 #define BASELAYER_HPP_ 
 
 #include "includes.hpp"
+#include "../BaseData.hpp"
+#include "../connections/BaseConnection.hpp"
 
-class BaseLayer{
+class BaseLayer: public BaseData {
 public:
-   BaseLayer(std::string layerName);
+   BaseLayer();
    virtual ~BaseLayer();
    virtual int initialize();
-   virtual int setParams(int in_bSize, int in_ySize, int in_wSize, int in_fSize);
+   virtual int setParams(
+         std::string layerName,
+         int in_bSize,
+         int in_ySize,
+         int in_xSize,
+         int in_fSize);
    //virtual int updateState(double timef, double dt) = 0;
+   void setPrev(BaseConnection* inConn){prevConn = inConn;}
+   void setNext(BaseConnection* inConn){nextConn = inConn;}
+   BaseConnection* getPrev(){return prevConn;};
+   BaseConnection* getNext(){return nextConn;};
 protected:
    float * d_AData;
-   int bSize, ySize, wSize, fSize;
-   std::string name;
+   int bSize, ySize, xSize, fSize;
 
 private:
-   bool paramsSet;
+   BaseConnection* prevConn;
+   BaseConnection* nextConn;
 
 };
 #endif 

@@ -5,35 +5,36 @@
 
 #include "BaseLayer.hpp"
 
-BaseLayer::BaseLayer(std::string layerName)
+BaseLayer::BaseLayer()
 {
    d_AData = NULL;
-   paramsSet = false;
-   name = layerName;
    bSize = 0;
    ySize = 0;
-   wSize = 0;
+   xSize = 0;
    fSize = 0;
+   prevConn = NULL;
+   nextConn = NULL;
 }
 
-int BaseLayer::setParams(int in_bSize, int in_ySize, int in_wSize, int in_fSize){
+//TODO fix the size paramters to be scales of column
+int BaseLayer::setParams(std::string layerName, int in_bSize, int in_ySize, int in_xSize, int in_fSize){
+   name = layerName;
    bSize = in_bSize;
    ySize = in_ySize;
-   wSize = in_wSize;
+   xSize = in_xSize;
    fSize = in_fSize;
    paramsSet = true;
 }
 
-
 int BaseLayer::initialize(){
    if(!paramsSet){
-      std::cerr << "Error! Layer " << name << " did not set parameters before trying to initialize\n";
+      std::cerr << "Error! Layer did not set parameters before trying to initialize\n";
       exit(UNDEFINED_PARAMS);
    }
    //Allocate d_AData based on size parameters
-   size_t memSize = bSize * ySize * wSize * fSize * sizeof(float);
+   size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
    //Testing error calling
-   CudaError( cudaMalloc(&d_AData, 0));
+   CudaError( cudaMalloc(&d_AData, memSize));
    return SUCCESS;
 }
 
