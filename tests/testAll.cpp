@@ -1,7 +1,7 @@
 #include <limits.h>
 #include "gtest/gtest.h"
 #include <iostream>
-#include "../src/BaseLayer.hpp"
+#include <src/layers/BaseLayer.hpp>
 
 
 //namespace {

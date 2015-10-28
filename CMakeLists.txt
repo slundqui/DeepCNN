@@ -25,6 +25,7 @@ include_directories(
    src
    ${CUDNN_PATH}/include
    ${GTEST_PATH}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 link_directories(
@@ -33,11 +34,14 @@ link_directories(
 )
 
 #Get all files with extensions in the src directory
-file(GLOB libSrcCPP src/*.cpp)
-file(GLOB libSrcHPP src/*.hpp)
-file(GLOB libSrcCU src/*.cu)
+file(GLOB tmp src/*.[ch]pp)
+set(LibSrc ${LibSrc} ${tmp})
+file(GLOB tmp src/layers/*.[ch]pp)
+set(LibSrc ${LibSrc} ${tmp})
+file(GLOB tmp src/connections/*.[ch]pp)
+set(LibSrc ${LibSrc} ${tmp})
 
-file(GLOB testSrcCPP tests/*.cpp)
+file(GLOB testLibSrc tests/*.[ch]pp)
 
 ##Add compilation files to NVCC
 #cuda_add_executable(
@@ -55,12 +59,11 @@ file(GLOB testSrcCPP tests/*.cpp)
 #Add compilation files to testing suite
 cuda_add_executable(
    test
-   ${testSrcCPP}
-   ${libSrcCPP}
-   ${libSrcHPP}
-   ${libSrcCU}
+   ${testLibSrc}
+   ${LibSrc}
 )
 
+#Link libraries
 target_link_libraries(
    test
    -lcudnn
