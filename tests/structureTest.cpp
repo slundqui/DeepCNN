@@ -13,13 +13,13 @@ class ListTests: public ::testing::Test {
          myCol = new Column(1, 1, 1);
 
          myLayer0 = new BaseLayer();
-         myLayer0->setParams(myCol, "layer0", 1, 1);
+         myLayer0->setParams(myCol, "layer0", 1);
 
          myLayer1 = new BaseLayer();
-         myLayer1->setParams(myCol, "layer1", 1, 1);
+         myLayer1->setParams(myCol, "layer1", 1);
 
          myLayer2 = new BaseLayer();
-         myLayer2->setParams(myCol, "layer2", 1, 1);
+         myLayer2->setParams(myCol, "layer2", 1);
 
          myConn0 = new BaseConnection();
          myConn0->setParams("conn0", 1, 1);

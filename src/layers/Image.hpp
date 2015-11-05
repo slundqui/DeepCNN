@@ -12,6 +12,7 @@
 #include "includes.hpp"
 #include "BaseLayer.hpp"
 #include "CImg.h"
+#include "../Column.hpp"
 #include <fstream>
 
 using namespace cimg_library;
@@ -24,7 +25,6 @@ public:
    virtual int setParams(
          Column* c,
          std::string layerName,
-         float in_stride,
          int num_features,
          std::string inList);
    virtual int forwardUpdate(int timestep);

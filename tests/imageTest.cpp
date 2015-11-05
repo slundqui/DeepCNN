@@ -20,14 +20,12 @@ class ImageTests: public ::testing::Test {
          imageLayerSingle = new Image();
          imageLayerSingle->setParams(singleCol,
                                "input",
-                               1, //stride
                                3, //features
                                "/home/sheng/workspace/DeepCNN/tests/testImgs/fileList.txt");//list of images
 
          imageLayerBatch = new Image();
          imageLayerBatch->setParams(batchCol,
                                "input",
-                               1, //stride
                                3, //features
                                "/home/sheng/workspace/DeepCNN/tests/testImgs/fileList.txt");//list of images
 
@@ -51,14 +49,14 @@ TEST_F(ImageTests, singleTest){
   singleCol->initialize();
   singleCol->run(1); //Run for 1 timestep, image 0
   //Grab and copy device activity
-  float * h_imgData = imageLayerSingle->getDeviceAct();
+  float * h_imgData = imageLayerSingle->getDeviceA();
   for(int i = 0; i < 5*4*3; i++){
      ASSERT_EQ(h_imgData[i], i);
   }
   free(h_imgData);
 
   singleCol->run(1); //image 1
-  h_imgData = imageLayerSingle->getDeviceAct();
+  h_imgData = imageLayerSingle->getDeviceA();
   int offset = 60;
   for(int i = 0; i < 5*4*3; i++){
      ASSERT_EQ(h_imgData[i], offset + i);
@@ -66,7 +64,7 @@ TEST_F(ImageTests, singleTest){
   free(h_imgData);
 
   singleCol->run(1); //image 2
-  h_imgData = imageLayerSingle->getDeviceAct();
+  h_imgData = imageLayerSingle->getDeviceA();
   offset = 120;
   for(int i = 0; i < 5*4*3; i++){
      ASSERT_EQ(h_imgData[i], offset + i);
@@ -78,7 +76,7 @@ TEST_F(ImageTests, batchTest){
   batchCol->initialize();
   batchCol->run(1); //Run for 1 timestep, image 0
   //Grab and copy device activity
-  float * h_imgData = imageLayerBatch->getDeviceAct();
+  float * h_imgData = imageLayerBatch->getDeviceA();
   for(int i = 0; i < 4*5*4*3; i++){
      //Last batch is a repeat of the first batch
      if(i < 3*5*4*3){
