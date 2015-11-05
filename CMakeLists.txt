@@ -2,8 +2,11 @@
 # It should be put in the directory containing the projects.
 
 cmake_minimum_required(VERSION 2.8)
+
 set(CUDNN_PATH ~/cuDNN/cudnn-7.0-linux-x64-v3 CACHE PATH "Location of cuDNN libraries")
 set(GTEST_PATH ~/gtest/gtest-1.7.0 CACHE PATH "Location of gtest library")
+set(MATIO_PATH ~/matio/build CACHE PATH "Location of matio library")
+set(CIMG_PATH ~/cimg/CImg-1.6.8_pre102815/ CACHE PATH "Location of cimg library")
 
 #Set output bin directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
@@ -25,12 +28,15 @@ include_directories(
    src
    ${CUDNN_PATH}/include
    ${GTEST_PATH}/include
+   ${MATIO_PATH}/include
+   ${CIMG_PATH}
    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 link_directories(
    ${CUDNN_PATH}/lib64
    ${GTEST_PATH}
+   ${MATIO_PATH}/lib
 )
 
 #Get all files with extensions in the src directory
@@ -69,5 +75,6 @@ target_link_libraries(
    -lcudnn
    -lgtest
    -lpthread
+   -lmatio
 )
 

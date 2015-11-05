@@ -1,0 +1,3 @@
+/home/sheng/workspace/DeepCNN/tests/testImgs/testImg1.png
+/home/sheng/workspace/DeepCNN/tests/testImgs/testImg2.png
+/home/sheng/workspace/DeepCNN/tests/testImgs/testImg3.png

@@ -16,7 +16,6 @@ public:
    BaseData();
    virtual ~BaseData();
    virtual int initialize() = 0;
-   //virtual int updateState(double timef, double dt) = 0;
    bool isParamsSet(){return paramsSet;}
    std::string getName(){return name;}
 protected:

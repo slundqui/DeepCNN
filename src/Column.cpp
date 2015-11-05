@@ -5,9 +5,13 @@
 
 #include "Column.hpp"
 
-Column::Column()
+Column::Column(int in_bSize, int in_ySize, int in_xSize)
 {
    //initialize();
+   bSize = in_bSize;
+   xSize = in_xSize;
+   ySize = in_ySize;
+   timestep = 0;
 }
 
 Column::~Column(){
@@ -69,5 +73,44 @@ int Column::addConn(BaseConnection* inConn){
 
    return SUCCESS;
 }
+
+int Column::initialize(){
+   for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
+      (*it)->initialize();
+   }
+   return SUCCESS;
+}
+
+//TODO
+int Column::run(int numTimesteps){
+   for(timestep = 0; timestep < numTimesteps; timestep++){
+      //Update all connections first (learning)
+      for(std::vector<BaseConnection*>::iterator connIt = connList.begin();
+            connIt != connList.end(); ++connIt){
+         (*connIt)->updateWeights(timestep);
+      }
+      //Update all layers (feedforward)
+      for(std::vector<BaseLayer*>::iterator layerIt = layerList.begin();
+            layerIt != layerList.end(); ++layerIt){
+         (*layerIt)->forwardUpdate(timestep);
+      }
+      //Update all gradients (backprop)
+      for(std::vector<BaseLayer*>::reverse_iterator rLayerIt = layerList.rbegin();
+            rLayerIt != layerList.rend(); ++rLayerIt){
+         (*rLayerIt)->backwardsUpdate(timestep);
+      }
+   }
+}
+
+
+int Column::initAndRun(int numTimesteps){
+   initialize();
+   run(numTimesteps);
+   return SUCCESS;
+}
+
+
+
+
 
 

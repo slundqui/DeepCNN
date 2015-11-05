@@ -4,26 +4,49 @@
  **/
 
 #include "BaseLayer.hpp"
+#include "../Column.hpp"
 
 BaseLayer::BaseLayer()
 {
    d_AData = NULL;
+   //h_AData = NULL;
    bSize = 0;
    ySize = 0;
    xSize = 0;
    fSize = 0;
+   stride = 0;
    prevConn = NULL;
    nextConn = NULL;
 }
 
-//TODO fix the size paramters to be scales of column
-int BaseLayer::setParams(std::string layerName, int in_bSize, int in_ySize, int in_xSize, int in_fSize){
+BaseLayer::~BaseLayer(){
+   CudaError( cudaFree(d_AData));
+   //free(h_AData);
+}
+
+int BaseLayer::setParams(Column* c, std::string layerName, int in_stride, int num_features){
    name = layerName;
-   bSize = in_bSize;
-   ySize = in_ySize;
-   xSize = in_xSize;
-   fSize = in_fSize;
+   stride = in_stride;
+   fSize = num_features;
+   bSize = c->getBSize();
+
+   int colYSize = c->getYSize();
+   assert(colYSize % stride == 0);
+   ySize = colYSize/stride;
+
+   int colXSize = c->getXSize();
+   assert(colXSize % stride == 0);
+   xSize = colXSize/stride;
+
    paramsSet = true;
+   return SUCCESS;
+}
+
+float* BaseLayer::getDeviceAct(){
+   size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
+   float * h_outMem = (float*) malloc(memSize);
+   CudaError(cudaMemcpy(h_outMem, d_AData, memSize, cudaMemcpyDeviceToHost));
+   return h_outMem;
 }
 
 int BaseLayer::initialize(){
@@ -31,15 +54,15 @@ int BaseLayer::initialize(){
       std::cerr << "Error! Layer did not set parameters before trying to initialize\n";
       exit(UNDEFINED_PARAMS);
    }
+   //TODO get actual size based on scale and column parameters
+
    //Allocate d_AData based on size parameters
    size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
-   //Testing error calling
+
    CudaError( cudaMalloc(&d_AData, memSize));
+
    return SUCCESS;
 }
 
 
-BaseLayer::~BaseLayer(){
-   CudaError( cudaFree(d_AData));
-}
 

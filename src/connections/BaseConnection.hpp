@@ -29,6 +29,7 @@ public:
    void setPrev(BaseLayer* inLayer){prevLayer = inLayer;}
    BaseLayer* getPrev(){return prevLayer;};
    BaseLayer* getNext(){return nextLayer;};
+   virtual int updateWeights(int timestep){return SUCCESS;}
 
 protected:
    BaseLayer* prevLayer;

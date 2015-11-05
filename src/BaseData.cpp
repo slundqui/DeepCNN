@@ -11,4 +11,3 @@ BaseData::BaseData(){
 
 BaseData::~BaseData(){
 }
-

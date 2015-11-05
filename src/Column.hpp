@@ -15,11 +15,17 @@
 
 class Column{
 public:
-   Column();
+   Column(int in_bSize, int in_ySize, int in_xSize);
    virtual ~Column();
    int addLayer(BaseLayer* inLayer);
    int addConn(BaseConnection* inConn);
-   //virtual int initialize();
+   int getBSize(){return bSize;}
+   int getXSize(){return xSize;}
+   int getYSize(){return ySize;}
+
+   virtual int initialize();
+   virtual int run(int numTimesteps);
+   virtual int initAndRun(int numTimesteps);
    //virtual int updateState(double timef, double dt);
 private:
    //Are these needed?
@@ -28,6 +34,9 @@ private:
 
    //Run list contains the order in which to achieve forward and backward passes
    std::vector<BaseData*> runList;
+
+   int bSize, xSize, ySize;
+   int timestep;
    
 
 };
