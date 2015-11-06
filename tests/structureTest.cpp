@@ -22,10 +22,10 @@ class ListTests: public ::testing::Test {
          myLayer2->setParams(myCol, "layer2", 1);
 
          myConn0 = new BaseConnection();
-         myConn0->setParams("conn0", 1, 1);
+         myConn0->setParams(myCol, "conn0", 1, 1, 1);
 
          myConn1 = new BaseConnection();
-         myConn1->setParams("conn1", 1, 1);
+         myConn1->setParams(myCol, "conn1", 1, 1, 1);
       }
 
       virtual void TearDown(){

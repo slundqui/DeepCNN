@@ -18,7 +18,7 @@ int Image::setParams(Column* c, std::string layerName, int num_features, std::st
    filenameList = inList;
    ySize = c->getYSize();
    xSize = c->getXSize();
-   BaseLayer::setParams(c, layerName, num_features);
+   return BaseLayer::setParams(c, layerName, num_features);
 }
 
 int Image::initialize(){
@@ -84,7 +84,9 @@ int Image::forwardUpdate(int timestep){
 }
 
 //Backwards update does nothing, as image does not have a gradient
-int Image::backwardsUpdate(int timestep){};
+int Image::backwardsUpdate(int timestep){
+   return SUCCESS;
+};
 
 
 

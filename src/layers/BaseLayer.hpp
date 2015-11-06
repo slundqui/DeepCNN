@@ -17,7 +17,6 @@
 #include "../connections/BaseConnection.hpp"
 
 
-class Column;
 
 class BaseLayer: public BaseData {
 public:
@@ -34,8 +33,8 @@ public:
    BaseConnection* getNext(){return nextConn;};
 
    //TODO make virtual, but need to change test
-   virtual int forwardUpdate(int timestep){};
-   virtual int backwardsUpdate(int timestep){};
+   virtual int forwardUpdate(int timestep){return SUCCESS;}
+   virtual int backwardsUpdate(int timestep){return SUCCESS;}
 
    //Note: this function is inefficient, only use for debugging
    //Caller's responsible for freeing memory

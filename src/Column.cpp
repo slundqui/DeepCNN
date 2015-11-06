@@ -100,6 +100,7 @@ int Column::run(int numTimesteps){
          (*rLayerIt)->backwardsUpdate(timestep);
       }
    }
+   return SUCCESS;
 }
 
 

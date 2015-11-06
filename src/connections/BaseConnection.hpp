@@ -20,21 +20,25 @@ public:
    BaseConnection();
    virtual ~BaseConnection();
    virtual int setParams(
-         std::string layerName,
-         int in_patch_ySize,
-         int in_patch_xSize);
+         Column* c,
+         std::string connName,
+         int in_nyp,
+         int in_nxp,
+         int in_stride);
    virtual int initialize();
+   virtual int getNextLayerSize(int* ySize, int* xSize);
    //virtual int updateState(double timef, double dt) = 0;
    void setNext(BaseLayer* inLayer){nextLayer = inLayer;}
    void setPrev(BaseLayer* inLayer){prevLayer = inLayer;}
    BaseLayer* getPrev(){return prevLayer;};
    BaseLayer* getNext(){return nextLayer;};
    virtual int updateWeights(int timestep){return SUCCESS;}
+   virtual int deliver(){return SUCCESS;}
 
 protected:
    BaseLayer* prevLayer;
    BaseLayer* nextLayer;
-   int nyp, nxp;
+   int nyp, nxp, stride;
 private:
 };
 #endif 

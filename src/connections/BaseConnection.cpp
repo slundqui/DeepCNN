@@ -13,11 +13,20 @@ BaseConnection::BaseConnection(){
 BaseConnection::~BaseConnection(){
 }
 
-int BaseConnection::setParams(std::string layerName, int in_nyp, int in_nxp){
-   name = layerName;
+int BaseConnection::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_stride){
+   BaseData::setParams(c, connName);
+   name = connName;
    nyp = in_nyp;
    nxp = in_nxp;
-   paramsSet = true;
+   stride = in_stride;
+   return SUCCESS;
+}
+
+//TODO this isn't needed once we make BaseConnection a pure virtual function
+int BaseConnection::getNextLayerSize(int* ySize, int* xSize){
+   std::cerr << "Error! Can't get connection size\n";
+   exit(ERROR);
+   return SUCCESS;
 }
 
 int BaseConnection::initialize(){

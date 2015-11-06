@@ -16,7 +16,8 @@ find_package(CUDA QUIET REQUIRED)
 #Set various cuda flags
 #NOTE the arch used here is for a gtx 960, which is in the machien sisters.
 #Change arch type as need be
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -arch=sm_52; )
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -arch=sm_52;)
+set(CMAKE_CXX_FLAGS "-W -Wall -Wno-unused-parameter -Wno-unused-variable")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -Xptxas; -v; -keep; -lineinfo; -g; -G;)

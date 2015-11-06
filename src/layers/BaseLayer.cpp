@@ -4,7 +4,7 @@
  **/
 
 #include "BaseLayer.hpp"
-#include "../Column.hpp"
+#include "Column.hpp"
 
 BaseLayer::BaseLayer()
 {
@@ -26,7 +26,7 @@ BaseLayer::~BaseLayer(){
 }
 
 int BaseLayer::setParams(Column* c, std::string layerName, int num_features){
-   name = layerName;
+   BaseData::setParams(c, layerName);
    fSize = num_features;
    bSize = c->getBSize();
 
