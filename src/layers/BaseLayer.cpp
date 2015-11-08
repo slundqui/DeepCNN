@@ -1,10 +1,12 @@
+#include "BaseLayer.hpp"
+#include "../connections/BaseConnection.hpp"
+#include "../utils.hpp"
+#include "../Column.hpp"
+
 /**
  * BaseLayer.cpp
  * Author: Sheng Lundquist
  **/
-
-#include "BaseLayer.hpp"
-#include "Column.hpp"
 
 BaseLayer::BaseLayer()
 {

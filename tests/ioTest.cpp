@@ -1,9 +1,18 @@
 #include "gtest/gtest.h"
 #include <iostream>
-#include "../src/matio_utils.hpp"
+#include <src/utils.hpp>
+
+//Fixture for testing auto size generation
+class mat_writing: public ::testing::Test{
+   protected:
+      virtual void SetUp(){
+      }
+      virtual void TearDown(){
+      }
+};
 
 //For use in writing to a mat file 
-TEST(mat_writing, writeMat){
+TEST_F(mat_writing, matTest){
    //Writing to mat
    //mat_t *matfp;
    //matvar_t *matvar;
@@ -54,3 +63,4 @@ TEST(mat_writing, writeMat){
    
    return;
 }
+

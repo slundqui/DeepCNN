@@ -14,7 +14,8 @@
 
 #include "includes.hpp"
 #include "../BaseData.hpp"
-#include "../connections/BaseConnection.hpp"
+
+class BaseConnection;
 
 class BaseLayer: public BaseData {
 public:

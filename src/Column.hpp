@@ -7,11 +7,8 @@
  **/
 #ifndef COLUMN_HPP_ 
 #define COLUMN_HPP_ 
-
-#include "includes.hpp"
 #include "layers/BaseLayer.hpp"
 #include "connections/BaseConnection.hpp"
-#include <vector>
 
 class Column{
 public:

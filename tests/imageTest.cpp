@@ -1,7 +1,6 @@
 #include <limits.h>
 #include "gtest/gtest.h"
 #include <iostream>
-#include <src/Column.hpp>
 #include <src/layers/Image.hpp>
 
 //Fixture for testing baseLayer class

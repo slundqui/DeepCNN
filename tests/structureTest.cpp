@@ -3,7 +3,6 @@
 #include <iostream>
 #include <src/Column.hpp>
 
-
 //Fixture for testing baseLayer class
 class ListTests: public ::testing::Test {
    protected:

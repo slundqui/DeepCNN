@@ -4,6 +4,7 @@
  **/
 
 #include "Column.hpp"
+#include "utils.hpp"
 
 Column::Column(int in_bSize, int in_ySize, int in_xSize)
 {

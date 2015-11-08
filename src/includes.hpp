@@ -1,14 +1,14 @@
 #ifndef INCLUDES_HPP_ 
 #define INCLUDES_HPP_ 
 #include <iostream>
-#include <string>
 #include <stdio.h>
-#include <cuda_runtime.h>
+#include <vector>
+#include <matio.h>
+#include <cudnn.h>
 #include <cstdlib>
-//#include <helper_cuda.h>
-//#include <helper_functions.h>
-#include "cuda_utils.hpp"
 #include <cassert>
+#include <string>
+#include <cuda_runtime.h>
 
 #define DEBUG 0
 

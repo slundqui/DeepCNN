@@ -5,6 +5,7 @@
 
 #include "Convolution.hpp"
 #include "../layers/BaseLayer.hpp"
+#include "../utils.hpp"
 #include "../Column.hpp"
 
 Convolution::Convolution(){
@@ -16,20 +17,13 @@ Convolution::Convolution(){
 Convolution::~Convolution(){
 }
 
-int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, int in_initVal, std::string in_loadFilename){
+int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_initVal, std::string in_loadFilename){
    weightInitType = in_weightInitType;
    assert(weightInitType == 0 || weightInitType == 1);
    initVal = in_initVal;
    loadFilename = in_loadFilename;
    return BaseConnection::setParams(c, connName, in_nyp, in_nxp, in_nfp, in_ystride, in_xstride);
 }
-
-//int Convolution::readWeights(){
-//}
-//
-//int Convolution::initializeWeights(){
-//   
-//}
 
 int Convolution::initialize(){
    BaseConnection::initialize();
@@ -86,10 +80,30 @@ int Convolution::allocate(){
    CudaError( cudaMalloc(&d_WData, gpuDataSize));
 
    //Initialize data
-
+   assert(initializeWeights() == SUCCESS);
 
    return SUCCESS;
 }
+
+int Convolution::initializeWeights(){
+   if(weightInitType == 0){ //uniform weights
+      cudaMemset(d_WData, initVal, gpuDataSize);
+   }
+   else if(weightInitType == 1){
+      int nDims;
+      size_t * dims;
+      readDataToDevice(loadFilename, d_WData, &nDims, &dims);
+      assert(nDims == 4);
+      int inNf = prevLayer->getFSize();
+
+      assert(dims[0] == (size_t)nfp);
+      assert(dims[1] == (size_t)inNf);
+      assert(dims[2] == (size_t)nyp);
+      assert(dims[1] == (size_t)nxp);
+   }
+   return SUCCESS;
+}
+
 
 int Convolution::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    //int bSize = col->getBSize();
