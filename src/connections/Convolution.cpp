@@ -8,15 +8,28 @@
 #include "../Column.hpp"
 
 Convolution::Convolution(){
+   d_WData = NULL;
+   loadFilename = "";
+   initVal = 0;
 }
 
 Convolution::~Convolution(){
 }
 
-int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride){
-
+int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, int in_initVal, std::string in_loadFilename){
+   weightInitType = in_weightInitType;
+   assert(weightInitType == 0 || weightInitType == 1);
+   initVal = in_initVal;
+   loadFilename = in_loadFilename;
    return BaseConnection::setParams(c, connName, in_nyp, in_nxp, in_nfp, in_ystride, in_xstride);
 }
+
+//int Convolution::readWeights(){
+//}
+//
+//int Convolution::initializeWeights(){
+//   
+//}
 
 int Convolution::initialize(){
    BaseConnection::initialize();
@@ -71,6 +84,10 @@ int Convolution::allocate(){
       &convAlgo
    ));
    CudaError( cudaMalloc(&d_WData, gpuDataSize));
+
+   //Initialize data
+
+
    return SUCCESS;
 }
 
@@ -127,3 +144,5 @@ int Convolution::deliver(){
    ));
    return SUCCESS;
 }
+
+

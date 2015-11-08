@@ -103,9 +103,7 @@ int Column::addConn(BaseConnection* inConn){
 }
 
 int Column::initialize(){
-   for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
-      (*it)->initialize();
-   }
+   for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){ (*it)->initialize(); }
    //Set total gpu size
    for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
       totalGpuSize += (*it)->getGpuDataSize();
