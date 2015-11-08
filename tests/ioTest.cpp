@@ -1,18 +1,67 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include <src/utils.hpp>
+#include <src/layers/Image.hpp>
+#include <connections/Convolution.hpp>
 
 //Fixture for testing auto size generation
-class mat_writing: public ::testing::Test{
+class mat_fileio: public ::testing::Test{
    protected:
       virtual void SetUp(){
+         myCol = new Column(3, //batch
+                            16, //ny
+                            8); //nx
+         input = new Image();
+         input->setParams(myCol, //column name
+                               "input", //name
+                               1, //features
+                               "/home/sheng/workspace/DeepCNN/tests/testImgs/square_16x8x1.txt");//list of images
+
+         conv = new Convolution();
+         conv->setParams(myCol, //column
+                         "conv", //name
+                         4, //nyp
+                         2, //nxp
+                         5, //nfp
+                         2, //ystride
+                         2, //xstride
+                         1, //from file init val
+                         0, //initVal, not used
+                         "/home/sheng/workspace/DeepCNN/tests/testWeights/idxcount_5x1x4x2.mat" //filename
+                         );
+
+         testLayer = new BaseLayer();
+         testLayer->setParams(myCol, //column
+                              "test"); //name
+         myCol->addLayer(input);
+         myCol->addConn(conv);
+         myCol->addLayer(testLayer);
       }
       virtual void TearDown(){
+         delete myCol;
+         delete input;
+         delete testLayer;
+         delete conv;
       }
+
+      Column* myCol;
+      Image* input;
+      BaseLayer* testLayer;
+      Convolution* conv;
 };
 
+//For reading a mat 
+TEST_F(mat_fileio, loadWeights){
+   myCol->initialize();
+   float* h_WData = conv->getHostW();
+   for(int i = 0; i < 4*2*5; i++){
+      ASSERT_EQ(h_WData[i], i);
+   }
+   free(h_WData);
+}
+
 //For use in writing to a mat file 
-TEST_F(mat_writing, matTest){
+TEST(mattest, matTest){
    //Writing to mat
    //mat_t *matfp;
    //matvar_t *matvar;

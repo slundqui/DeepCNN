@@ -6,6 +6,7 @@
 #include "Convolution.hpp"
 #include "../layers/BaseLayer.hpp"
 #include "../utils.hpp"
+#include "../cuda_utils.hpp"
 #include "../Column.hpp"
 
 Convolution::Convolution(){
@@ -56,7 +57,7 @@ int Convolution::initialize(){
    );
 
    //Set size for this layer
-   gpuDataSize = nyp * nxp * nfp * sizeof(float);
+   gpuDataSize = prevLayer->getFSize() * nyp * nxp * nfp * sizeof(float);
 
    return SUCCESS;
 }
@@ -85,21 +86,36 @@ int Convolution::allocate(){
    return SUCCESS;
 }
 
+
+float* Convolution::getHostW(){
+   float * h_outMem = (float*) malloc(gpuDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_WData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
+}
+
 int Convolution::initializeWeights(){
+   int inNf = prevLayer->getFSize();
+
    if(weightInitType == 0){ //uniform weights
-      cudaMemset(d_WData, initVal, gpuDataSize);
+      std::cout << "Memcpying " << initVal << " for " << gpuDataSize << " bytes to weights\n";
+      int count = nfp * inNf * nyp * nxp;
+      setArray(d_WData, count, initVal);
    }
    else if(weightInitType == 1){
       int nDims;
       size_t * dims;
       readDataToDevice(loadFilename, d_WData, &nDims, &dims);
       assert(nDims == 4);
-      int inNf = prevLayer->getFSize();
 
       assert(dims[0] == (size_t)nfp);
       assert(dims[1] == (size_t)inNf);
       assert(dims[2] == (size_t)nyp);
-      assert(dims[1] == (size_t)nxp);
+      assert(dims[3] == (size_t)nxp);
+   }
+   else{
+      std::cerr << "Weight init type of " << weightInitType << " not recognized\n";
+      exit(BAD_PARAM);
    }
    return SUCCESS;
 }

@@ -4,7 +4,7 @@
 #include <connections/Convolution.hpp>
 
 //Fixture for testing auto size generation
-class SizeTests: public ::testing::Test{
+class convTests: public ::testing::Test{
    protected:
       virtual void SetUp(){
          myCol = new Column(3, //batch
@@ -23,7 +23,11 @@ class SizeTests: public ::testing::Test{
                          2, //nxp
                          5, //nfp
                          2, //ystride
-                         2); //xstride
+                         2, //xstride
+                         0, //uniform init
+                         .5, //initVal
+                         "" //filename, not used
+                         );
 
          testLayer = new BaseLayer();
          testLayer->setParams(myCol, //column
@@ -46,9 +50,18 @@ class SizeTests: public ::testing::Test{
       Convolution* conv;
 };
 
-TEST_F(SizeTests, sizeSetTest){
+TEST_F(convTests, sizeSetTest){
    myCol->initialize();
    EXPECT_EQ(testLayer->getYSize(), 8);
    EXPECT_EQ(testLayer->getXSize(), 4);
    EXPECT_EQ(testLayer->getFSize(), 5);
+}
+
+TEST_F(convTests, initWeightsTest){
+   myCol->initialize();
+   float* h_WData = conv->getHostW();
+   for(int i = 0; i < 2*1*2*5; i++){
+      //std::cout << "idx " << i << " val " << h_WData[i] << "\n";
+      ASSERT_EQ(h_WData[i], 0.5);
+   }
 }

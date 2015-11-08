@@ -17,5 +17,6 @@
 #define UNDEFINED_PARAMS 1
 #define INVALID_DATA_ADDITION 2
 #define FILEIO_ERROR 3
+#define BAD_PARAM 4
 #define ERROR 255
 #endif

@@ -43,6 +43,8 @@ link_directories(
 #Get all files with extensions in the src directory
 file(GLOB tmp src/*.[ch]pp)
 set(LibSrc ${LibSrc} ${tmp})
+file(GLOB tmp src/*.cu)
+set(LibSrc ${LibSrc} ${tmp})
 file(GLOB tmp src/layers/*.[ch]pp)
 set(LibSrc ${LibSrc} ${tmp})
 file(GLOB tmp src/connections/*.[ch]pp)

@@ -30,6 +30,7 @@ public:
    virtual int updateWeights(int timestep);
    virtual int deliver();
    virtual int setNextLayerSize(int* ySize, int* xSize, int* fSize);
+   float* getHostW();
 
 protected:
    cudnnFilterDescriptor_t filterDescriptor;

@@ -4,6 +4,7 @@
 
 #define CudaError(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 #define CudnnError(ans) { cudnnAssert((ans), __FILE__, __LINE__); }
+#define CudaCallError() { lastCallError(__FILE__, __LINE__); }
 
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool term=true){
    if(code != cudaSuccess){
@@ -17,6 +18,10 @@ inline void cudnnAssert(cudnnStatus_t status, const char *file, int line, bool t
       std::cerr << "CuDNN error: " << cudnnGetErrorString(status) << " " << file << " " << line << "\n";
       if(term) abort();
    }
+}
+
+inline void lastCallError(const char *file, int line, bool term=true){
+   gpuAssert(cudaGetLastError(), file, line, term);
 }
 
 inline void cudnnPrintTensorDesc(cudnnTensorDescriptor_t desc){
@@ -38,7 +43,6 @@ inline void cudnnPrintTensorDesc(cudnnTensorDescriptor_t desc){
 }
 
 inline void cudnnPrintConvDesc(cudnnConvolutionDescriptor_t desc){
-   cudnnDataType_t dataType;
    int pad_h, pad_w, u, v, upscalex, upscaley;
    cudnnConvolutionMode_t mode;
    if(!desc) std::cerr << "Input conv desc is null\n";
