@@ -21,13 +21,13 @@ class ImageTests: public ::testing::Test {
          imageLayerSingle->setParams(singleCol,
                                "input",
                                3, //features
-                               "/home/sheng/workspace/DeepCNN/tests/testImgs/fileList.txt");//list of images
+                               "/home/sheng/workspace/DeepCNN/tests/testImgs/idxcount_5x4x3.txt");//list of images
 
          imageLayerBatch = new Image();
          imageLayerBatch->setParams(batchCol,
                                "input",
-                               3, //features
-                               "/home/sheng/workspace/DeepCNN/tests/testImgs/fileList.txt");//list of images
+                               3,
+                               "/home/sheng/workspace/DeepCNN/tests/testImgs/idxcount_5x4x3.txt");//list of images
 
          //Add to columns
          singleCol->addLayer(imageLayerSingle);
@@ -49,14 +49,14 @@ TEST_F(ImageTests, singleTest){
   singleCol->initialize();
   singleCol->run(1); //Run for 1 timestep, image 0
   //Grab and copy device activity
-  float * h_imgData = imageLayerSingle->getDeviceA();
+  float * h_imgData = imageLayerSingle->getHostA();
   for(int i = 0; i < 5*4*3; i++){
      ASSERT_EQ(h_imgData[i], i);
   }
   free(h_imgData);
 
   singleCol->run(1); //image 1
-  h_imgData = imageLayerSingle->getDeviceA();
+  h_imgData = imageLayerSingle->getHostA();
   int offset = 60;
   for(int i = 0; i < 5*4*3; i++){
      ASSERT_EQ(h_imgData[i], offset + i);
@@ -64,7 +64,7 @@ TEST_F(ImageTests, singleTest){
   free(h_imgData);
 
   singleCol->run(1); //image 2
-  h_imgData = imageLayerSingle->getDeviceA();
+  h_imgData = imageLayerSingle->getHostA();
   offset = 120;
   for(int i = 0; i < 5*4*3; i++){
      ASSERT_EQ(h_imgData[i], offset + i);
@@ -76,7 +76,7 @@ TEST_F(ImageTests, batchTest){
   batchCol->initialize();
   batchCol->run(1); //Run for 1 timestep, image 0
   //Grab and copy device activity
-  float * h_imgData = imageLayerBatch->getDeviceA();
+  float * h_imgData = imageLayerBatch->getHostA();
   for(int i = 0; i < 4*5*4*3; i++){
      //Last batch is a repeat of the first batch
      if(i < 3*5*4*3){

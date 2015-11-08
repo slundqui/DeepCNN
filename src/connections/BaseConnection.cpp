@@ -13,17 +13,18 @@ BaseConnection::BaseConnection(){
 BaseConnection::~BaseConnection(){
 }
 
-int BaseConnection::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_stride){
+int BaseConnection::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride){
    BaseData::setParams(c, connName);
    name = connName;
    nyp = in_nyp;
    nxp = in_nxp;
-   stride = in_stride;
+   nfp = in_nfp;
+   ystride = in_ystride;
+   xstride = in_xstride;
    return SUCCESS;
 }
 
-//TODO this isn't needed once we make BaseConnection a pure virtual function
-int BaseConnection::getNextLayerSize(int* ySize, int* xSize){
+int BaseConnection::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    std::cerr << "Error! Can't get connection size\n";
    exit(ERROR);
    return SUCCESS;
@@ -34,6 +35,10 @@ int BaseConnection::initialize(){
       std::cerr << "Error! Connection did not set parameters before trying to initialize\n";
       exit(UNDEFINED_PARAMS);
    }
+   return SUCCESS;
+}
+
+int BaseConnection::allocate(){
    //TODO
    return SUCCESS;
 }

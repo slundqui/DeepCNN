@@ -16,17 +16,15 @@
 #include "../BaseData.hpp"
 #include "../connections/BaseConnection.hpp"
 
-
-
 class BaseLayer: public BaseData {
 public:
    BaseLayer();
    virtual ~BaseLayer();
    virtual int initialize();
+   virtual int allocate();
    virtual int setParams(
          Column* c,
-         std::string layerName,
-         int num_features);
+         std::string layerName);
    void setPrev(BaseConnection* inConn){prevConn = inConn;}
    void setNext(BaseConnection* inConn){nextConn = inConn;}
    BaseConnection* getPrev(){return prevConn;};
@@ -38,12 +36,27 @@ public:
 
    //Note: this function is inefficient, only use for debugging
    //Caller's responsible for freeing memory
-   float * getDeviceA();
+   float * getHostA();
+
+   float * getDeviceA(){return d_AData;}
+   float * getDeviceG(){return d_GData;}
+
+   int getBSize(){return bSize;}
+   int getYSize(){return ySize;}
+   int getXSize(){return xSize;}
+   int getFSize(){return fSize;}
+
+   cudnnTensorDescriptor_t getOutputDescriptor(){return cudnnADescriptor;}
+   cudnnTensorDescriptor_t getInputDescriptor(){return cudnnUDescriptor;}
+
 protected:
-   float * d_AData; //Send Device buffer
-   float * d_UData; //Receive Device buffer 
+   float * d_AData; //Feedforward activity buffer
+   float * d_GData; //Backpass gradient buffer
    //float * h_AData; //Host memory
    int bSize, ySize, xSize, fSize;
+   cudnnTensorDescriptor_t cudnnADescriptor;
+   cudnnTensorDescriptor_t cudnnUDescriptor;
+   virtual int setSize();
 
 private:
    BaseConnection* prevConn;

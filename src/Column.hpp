@@ -26,9 +26,10 @@ public:
    virtual int initialize();
    virtual int run(int numTimesteps);
    virtual int initAndRun(int numTimesteps);
+   cudnnHandle_t getCudnnHandle(){return cudnn_handle;}
+   void query_device(int id);
    //virtual int updateState(double timef, double dt);
 private:
-   //Are these needed?
    std::vector<BaseLayer*> layerList;
    std::vector<BaseConnection*> connList;
 
@@ -37,6 +38,14 @@ private:
 
    int bSize, xSize, ySize;
    int timestep;
+
+   //Total size of needed gpu memory
+   size_t totalGpuSize;
+
+   //Device properties
+   cudnnHandle_t cudnn_handle;
+   cudaDeviceProp devProp;
+
    
 
 };

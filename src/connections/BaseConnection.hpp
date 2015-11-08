@@ -19,14 +19,19 @@ class BaseConnection : public BaseData{
 public:
    BaseConnection();
    virtual ~BaseConnection();
+
    virtual int setParams(
          Column* c,
          std::string connName,
          int in_nyp,
          int in_nxp,
-         int in_stride);
+         int in_nfp,
+         int in_ystride,
+         int in_xstride);
+
    virtual int initialize();
-   virtual int getNextLayerSize(int* ySize, int* xSize);
+   virtual int allocate();
+   virtual int setNextLayerSize(int* ySize, int* xSize, int* fSize);
    //virtual int updateState(double timef, double dt) = 0;
    void setNext(BaseLayer* inLayer){nextLayer = inLayer;}
    void setPrev(BaseLayer* inLayer){prevLayer = inLayer;}
@@ -38,7 +43,7 @@ public:
 protected:
    BaseLayer* prevLayer;
    BaseLayer* nextLayer;
-   int nyp, nxp, stride;
+   int nyp, nxp, nfp, xstride, ystride;
 private:
 };
 #endif 

@@ -30,6 +30,7 @@ public:
    virtual int forwardUpdate(int timestep);
    virtual int backwardsUpdate(int timestep);
 protected:
+   virtual int setSize();
    int loadImage(std::string filename, int batchIdx);
    std::string filenameList;
    std::ifstream listFile;

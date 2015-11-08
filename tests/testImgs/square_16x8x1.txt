@@ -1,0 +1,1 @@
+/home/sheng/workspace/DeepCNN/tests/testImgs/square_16x8x1.png

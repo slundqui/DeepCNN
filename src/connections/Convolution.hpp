@@ -9,7 +9,6 @@
 #include "includes.hpp"
 #include "BaseConnection.hpp"
 
-//Forward declaration of BaseLayer
 class Convolution : public BaseConnection{
 public:
    Convolution();
@@ -19,9 +18,22 @@ public:
          std::string connName,
          int in_nyp,
          int in_nxp,
-         int in_stride);
+         int in_nfp,
+         int in_ystride,
+         int in_xstride
+         );
    virtual int initialize();
+   virtual int allocate();
    virtual int updateWeights(int timestep);
    virtual int deliver();
+   virtual int setNextLayerSize(int* ySize, int* xSize, int* fSize);
+
+protected:
+   cudnnFilterDescriptor_t filterDescriptor;
+   cudnnConvolutionDescriptor_t convDescriptor;
+   cudnnConvolutionFwdAlgo_t convAlgo;
+
+   float* d_WData;
+
 };
 #endif 

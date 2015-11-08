@@ -18,8 +18,15 @@ int Image::setParams(Column* c, std::string layerName, int num_features, std::st
    filenameList = inList;
    ySize = c->getYSize();
    xSize = c->getXSize();
-   return BaseLayer::setParams(c, layerName, num_features);
+   fSize = num_features;
+   return BaseLayer::setParams(c, layerName);
 }
+
+int Image::setSize(){
+   //Image size should already be set, do nothing
+   return SUCCESS;
+}
+
 
 int Image::initialize(){
    BaseLayer::initialize();
@@ -70,14 +77,14 @@ int Image::forwardUpdate(int timestep){
       if(listFile.eof()){
          listFile.clear();
          listFile.seekg(0);
-         std::cout << "Rewinding file " << filenameList << "\n";
+         if(DEBUG) std::cout << "Rewinding file " << filenameList << "\n";
          getline(listFile, filename);
          if(listFile.eof()){
             std::cerr << "Error, file " << filenameList << " empty\n";
             exit(FILEIO_ERROR);
          }
       }
-      std::cout << "Reading image " << filename << " into batch " << b << "\n";
+      if(DEBUG) std::cout << "Reading image " << filename << " into batch " << b << "\n";
       loadImage(filename, b);
    }
    return SUCCESS;
