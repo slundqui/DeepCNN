@@ -32,8 +32,8 @@ public:
    BaseConnection* getNext(){return nextConn;};
 
    //TODO make virtual, but need to change test
-   virtual int forwardUpdate(int timestep){return SUCCESS;}
-   virtual int backwardsUpdate(int timestep){return SUCCESS;}
+   virtual int forwardUpdate(int timestep);
+   virtual int backwardsUpdate(int timestep);
 
    //Note: this function is inefficient, only use for debugging
    //Caller's responsible for freeing memory
@@ -47,8 +47,8 @@ public:
    int getXSize(){return xSize;}
    int getFSize(){return fSize;}
 
-   cudnnTensorDescriptor_t getOutputDescriptor(){return cudnnADescriptor;}
-   cudnnTensorDescriptor_t getInputDescriptor(){return cudnnUDescriptor;}
+   cudnnTensorDescriptor_t getDataDescriptor(){return cudnnADescriptor;}
+   cudnnTensorDescriptor_t getGradientDescriptor(){return cudnnGDescriptor;}
 
 protected:
    float * d_AData; //Feedforward activity buffer
@@ -56,7 +56,7 @@ protected:
    //float * h_AData; //Host memory
    int bSize, ySize, xSize, fSize;
    cudnnTensorDescriptor_t cudnnADescriptor;
-   cudnnTensorDescriptor_t cudnnUDescriptor;
+   cudnnTensorDescriptor_t cudnnGDescriptor;
    virtual int setSize();
 
 private:

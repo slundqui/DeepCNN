@@ -36,6 +36,8 @@ protected:
    cudnnFilterDescriptor_t filterDescriptor;
    cudnnConvolutionDescriptor_t convDescriptor;
    cudnnConvolutionFwdAlgo_t convAlgo;
+   size_t workspaceSize;
+   void* d_workspaceMem;
    virtual int initializeWeights();
 
    int weightInitType;

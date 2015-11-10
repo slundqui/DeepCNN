@@ -104,7 +104,9 @@ int Column::addConn(BaseConnection* inConn){
 }
 
 int Column::initialize(){
-   for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){ (*it)->initialize(); }
+   for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
+      (*it)->initialize();
+   }
    //Set total gpu size
    for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
       totalGpuSize += (*it)->getGpuDataSize();
@@ -117,7 +119,7 @@ int Column::initialize(){
 
 //TODO
 int Column::run(int numTimesteps){
-   for(timestep = 0; timestep < numTimesteps; timestep++){
+   for(int t = 0; t < numTimesteps; t++){
       //Update all connections first (learning)
       for(std::vector<BaseConnection*>::iterator connIt = connList.begin();
             connIt != connList.end(); ++connIt){
@@ -133,6 +135,7 @@ int Column::run(int numTimesteps){
             rLayerIt != layerList.rend(); ++rLayerIt){
          (*rLayerIt)->backwardsUpdate(timestep);
       }
+      timestep++;
    }
    return SUCCESS;
 }

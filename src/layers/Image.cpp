@@ -5,6 +5,7 @@
 
 #include "Image.hpp"
 #include "../utils.hpp"
+#include "../cuda_utils.hpp"
 
 
 Image::Image()
@@ -45,6 +46,13 @@ int Image::initialize(){
    return SUCCESS;
 }
 
+int Image::allocate(){
+   BaseLayer::allocate();
+   //Start off with a forward pass to load 1st image (with -1 timestep)
+   forwardUpdate(-1);
+   return SUCCESS;
+}
+
 //Loads image onto GPU
 int Image::loadImage(std::string filename, int batchIdx){
    //Get image
@@ -65,13 +73,23 @@ int Image::loadImage(std::string filename, int batchIdx){
    int numVals = ySize * xSize * fSize;
    //Offset based on batch
    float * d_batchAData = &(d_AData[batchIdx * numVals]);
-   CudaError(cudaMemcpy(d_batchAData, image.data(), numVals*sizeof(float), cudaMemcpyHostToDevice));
+   float* h_data = image.data();
+   
+   for(int i = 0; i < xSize * ySize * fSize; i++){
+      h_data[i] = h_data[i] / 255; //Scale from 0 to 1
+   }
+
+   CudaError(cudaMemcpy(d_batchAData, h_data, numVals*sizeof(float), cudaMemcpyHostToDevice));
    return SUCCESS;
 }
 
 int Image::forwardUpdate(int timestep){
    std::string filename;
 
+   //First image was already loaded on first timestep
+   if(timestep == 0){
+      return SUCCESS;
+   }
    //Read image per batch
    for(int b = 0; b < bSize; b++){
       getline(listFile, filename);

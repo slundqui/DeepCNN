@@ -13,9 +13,15 @@ Convolution::Convolution(){
    d_WData = NULL;
    loadFilename = "";
    initVal = 0;
+   workspaceSize = 0;
+   d_workspaceMem = NULL;
 }
 
 Convolution::~Convolution(){
+   CudaError(cudaFree(d_WData));
+   if(d_workspaceMem){
+      CudaError(cudaFree(d_workspaceMem));
+   }
 }
 
 int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_initVal, std::string in_loadFilename){
@@ -48,8 +54,8 @@ int Convolution::initialize(){
    if(DEBUG) std::cout << "Connection " << name << " setting cudnn conv descrptor with " << ystride << ", " << xstride << "\n";
    CudnnError(cudnnCreateConvolutionDescriptor(&convDescriptor));
    CudnnError(cudnnSetConvolution2dDescriptor(convDescriptor,
-      0,
-      0,  //zero-padding height and width
+      (nyp-1)/2, //Padding height, makes layer size independent of patch size
+      (nxp-1)/2,  //Padding width
       ystride, //Vertical filter stride
       xstride, //Horizontal filter stride
       1, 1, //upscale the input in x/y direction
@@ -68,17 +74,29 @@ int Convolution::allocate(){
 
    CudnnError(cudnnGetConvolutionForwardAlgorithm(
       handle,
-      prevLayer->getOutputDescriptor(),
+      prevLayer->getDataDescriptor(),
       filterDescriptor,
       convDescriptor,
-      nextLayer->getInputDescriptor(),
-      //TODO: use this flag, but we need to calculate how much free space is left on the GPU and pass it in as next argument
+      nextLayer->getDataDescriptor(),
+      //TODO make sure we have enough workspace size
       //CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
-      CUDNN_CONVOLUTION_FWD_NO_WORKSPACE,
+      //CUDNN_CONVOLUTION_FWD_NO_WORKSPACE,
+      CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
       0,
       &convAlgo
    ));
-   CudaError( cudaMalloc(&d_WData, gpuDataSize));
+
+   CudnnError(cudnnGetConvolutionForwardWorkspaceSize(
+      handle,
+      prevLayer->getDataDescriptor(),
+      filterDescriptor,
+      convDescriptor,
+      nextLayer->getDataDescriptor(),
+      convAlgo,
+      &workspaceSize));
+
+   CudaError(cudaMalloc(&d_WData, gpuDataSize));
+   CudaError(cudaMalloc(&d_workspaceMem, workspaceSize));
 
    //Initialize data
    assert(initializeWeights() == SUCCESS);
@@ -88,6 +106,10 @@ int Convolution::allocate(){
 
 
 float* Convolution::getHostW(){
+   int inNf = prevLayer->getFSize();
+   size_t memSize = nyp * inNf * nxp * nfp * sizeof(float);
+   assert(memSize == gpuDataSize);
+   CudaError(cudaDeviceSynchronize());
    float * h_outMem = (float*) malloc(gpuDataSize);
    CudaError(cudaMemcpy(h_outMem, d_WData, gpuDataSize, cudaMemcpyDeviceToHost));
    CudaError(cudaDeviceSynchronize());
@@ -98,7 +120,6 @@ int Convolution::initializeWeights(){
    int inNf = prevLayer->getFSize();
 
    if(weightInitType == 0){ //uniform weights
-      std::cout << "Memcpying " << initVal << " for " << gpuDataSize << " bytes to weights\n";
       int count = nfp * inNf * nyp * nxp;
       setArray(d_WData, count, initVal);
    }
@@ -125,7 +146,7 @@ int Convolution::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    //int bSize = col->getBSize();
    int tempBSize;
 
-   cudnnTensorDescriptor_t inputDesc = prevLayer->getOutputDescriptor();
+   cudnnTensorDescriptor_t inputDesc = prevLayer->getDataDescriptor();
 
    //Query output layout and check with PV layout
    CudnnError(cudnnGetConvolution2dForwardOutputDim(
@@ -148,15 +169,18 @@ int Convolution::updateWeights(int timestep){
 }
 
 int Convolution::deliver(){
+   if(DEBUG) std::cout << "Convolution deliver called\n";
+
    cudnnHandle_t handle = col->getCudnnHandle();
-   cudnnTensorDescriptor_t inputDesc = prevLayer->getOutputDescriptor();
+   cudnnTensorDescriptor_t inputDesc = prevLayer->getDataDescriptor();
    float* inputPtr = prevLayer->getDeviceA();
-   cudnnTensorDescriptor_t outputDesc = nextLayer->getOutputDescriptor();
+   cudnnTensorDescriptor_t outputDesc = nextLayer->getDataDescriptor();
    float* outputPtr = nextLayer->getDeviceA();
 
-   int alpha = 1; //input scaling
-   int beta = 0; //output scaling, 0 means do not scale
+   float alpha = 1; //input scaling
+   float beta = 0; //output scaling, 0 means do not scale
 
+   CudaError(cudaDeviceSynchronize());
    CudnnError(cudnnConvolutionForward(
       handle, //cudnn handle
       &alpha, //Input scaling factor
@@ -166,12 +190,13 @@ int Convolution::deliver(){
       d_WData, //Filter pointer
       convDescriptor, //Convolution descriptor
       convAlgo, //Convolution algorithm
-      NULL, //Workspace memory TODO
-      0, //Workspace size
-      &beta,
+      d_workspaceMem, //Workspace memory TODO
+      workspaceSize, //Workspace size
+      &beta, //Output scaling factor
       outputDesc, //Output descriptor
       outputPtr //Output pointer
    ));
+
    return SUCCESS;
 }
 

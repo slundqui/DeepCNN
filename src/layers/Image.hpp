@@ -22,6 +22,7 @@ public:
    Image();
    virtual ~Image();
    virtual int initialize();
+   virtual int allocate();
    virtual int setParams(
          Column* c,
          std::string layerName,

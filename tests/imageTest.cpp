@@ -46,11 +46,11 @@ class ImageTests: public ::testing::Test {
 
 TEST_F(ImageTests, singleTest){
   singleCol->initialize();
-  singleCol->run(1); //Run for 1 timestep, image 0
+  singleCol->run(1); //image 1
   //Grab and copy device activity
   float * h_imgData = imageLayerSingle->getHostA();
   for(int i = 0; i < 5*4*3; i++){
-     ASSERT_EQ(h_imgData[i], i);
+     ASSERT_EQ(h_imgData[i], (float)i/255);
   }
   free(h_imgData);
 
@@ -58,7 +58,7 @@ TEST_F(ImageTests, singleTest){
   h_imgData = imageLayerSingle->getHostA();
   int offset = 60;
   for(int i = 0; i < 5*4*3; i++){
-     ASSERT_EQ(h_imgData[i], offset + i);
+     ASSERT_EQ(h_imgData[i], (float)(offset + i)/255);
   }
   free(h_imgData);
 
@@ -66,23 +66,23 @@ TEST_F(ImageTests, singleTest){
   h_imgData = imageLayerSingle->getHostA();
   offset = 120;
   for(int i = 0; i < 5*4*3; i++){
-     ASSERT_EQ(h_imgData[i], offset + i);
+     ASSERT_EQ(h_imgData[i], (float)(offset + i)/255);
   }
   free(h_imgData);
 }
 
 TEST_F(ImageTests, batchTest){
-  batchCol->initialize();
-  batchCol->run(1); //Run for 1 timestep, image 0
+  batchCol->initialize(); //This should load the first image
+  singleCol->run(1); //image 2
   //Grab and copy device activity
   float * h_imgData = imageLayerBatch->getHostA();
   for(int i = 0; i < 4*5*4*3; i++){
      //Last batch is a repeat of the first batch
      if(i < 3*5*4*3){
-        ASSERT_EQ(h_imgData[i], i);
+        ASSERT_EQ(h_imgData[i], (float)i / 255);
      }
      else{
-        ASSERT_EQ(h_imgData[i], i-180);
+        ASSERT_EQ(h_imgData[i], (float)(i-180)/255);
      }
   }
   free(h_imgData);

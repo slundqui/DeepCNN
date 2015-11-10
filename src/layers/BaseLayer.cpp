@@ -2,6 +2,7 @@
 #include "../connections/BaseConnection.hpp"
 #include "../utils.hpp"
 #include "../Column.hpp"
+#include "../cuda_utils.hpp"
 
 /**
  * BaseLayer.cpp
@@ -27,7 +28,7 @@ BaseLayer::~BaseLayer(){
    
    //Currently bugging out, maybe need to set the tensor first
    //CudnnError( cudnnDestroyTensorDescriptor(cudnnADescriptor));
-   //CudnnError( cudnnDestroyTensorDescriptor(cudnnUDescriptor));
+   //CudnnError( cudnnDestroyTensorDescriptor(cudnnGDescriptor));
 
    //free(h_AData);
 }
@@ -42,8 +43,11 @@ int BaseLayer::setParams(Column* c, std::string layerName){
 
 float* BaseLayer::getHostA(){
    size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
-   float * h_outMem = (float*) malloc(memSize);
-   CudaError(cudaMemcpy(h_outMem, d_AData, memSize, cudaMemcpyDeviceToHost));
+   assert(memSize == gpuDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(gpuDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_AData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
    return h_outMem;
 }
 
@@ -68,7 +72,7 @@ int BaseLayer::initialize(){
 
    //Create descriptor objects for both input and output buffers
    CudnnError(cudnnCreateTensorDescriptor(&cudnnADescriptor));
-   CudnnError(cudnnCreateTensorDescriptor(&cudnnUDescriptor));
+   CudnnError(cudnnCreateTensorDescriptor(&cudnnGDescriptor));
 
    if(DEBUG) std::cout << "Layer " << name << " setting descriptors " << bSize << ", " << fSize << ", " << ySize << ", " << xSize << "\n";
    CudnnError(cudnnSetTensor4dDescriptor(cudnnADescriptor,
@@ -80,7 +84,9 @@ int BaseLayer::initialize(){
       xSize) //Width of each feature map
    ); 
 
-   CudnnError(cudnnSetTensor4dDescriptor(cudnnUDescriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+   CudnnError(cudnnSetTensor4dDescriptor(cudnnGDescriptor,
+      CUDNN_TENSOR_NCHW, //Ordering
+      CUDNN_DATA_FLOAT, //Type
       bSize, //Number of images
       fSize, //Number of feature maps per image
       ySize, //Height of each feature map
@@ -93,6 +99,21 @@ int BaseLayer::initialize(){
 int BaseLayer::allocate(){
    CudaError( cudaMalloc(&d_AData, gpuDataSize));
    CudaError( cudaMalloc(&d_GData, gpuDataSize));
+
+   //Initialize all layer data to 0
+   int count = bSize * ySize * xSize * fSize;
+   setArray(d_AData, count, 0);
+   setArray(d_GData, count, 0);
+
+   return SUCCESS;
+}
+
+int BaseLayer::forwardUpdate(int timestep){
+   prevConn->deliver();
+   return SUCCESS;
+}
+
+int BaseLayer::backwardsUpdate(int timestep){
    return SUCCESS;
 }
 

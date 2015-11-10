@@ -24,13 +24,35 @@ inline void lastCallError(const char *file, int line, bool term=true){
    gpuAssert(cudaGetLastError(), file, line, term);
 }
 
+inline void printMat(float* array, int nb, int ny, int nx, int nf){
+   for(int bi = 0; bi < nb; bi++){
+      printf("Batch %d: \n", bi);
+
+      for(int fi = 0; fi < nf; fi++){
+         printf("\tFeature %d\n", fi); 
+
+         for(int yi = 0; yi < ny; yi++){
+            printf("\t");
+            for(int xi = 0; xi < nx; xi++){
+               int idx = (bi*ny*nx*nf) + (fi*ny*nx) + (yi*nx) + xi;
+               printf("%f ", array[idx]);
+            }
+            printf("\n");
+         }
+      }
+
+   }
+   
+}
+
+
 inline void cudnnPrintTensorDesc(cudnnTensorDescriptor_t desc){
    cudnnDataType_t dataType;
    int n, c, h, w, nStride, cStride, hStride, wStride;
    if(!desc) std::cerr << "Input tensor desc is null\n";
    CudnnError(cudnnGetTensor4dDescriptor(desc,
-      &dataType,
-      &n, //dataType
+      &dataType, //dataType
+      &n, //batch
       &c, //channels
       &h, //height
       &w, //width
@@ -39,7 +61,21 @@ inline void cudnnPrintTensorDesc(cudnnTensorDescriptor_t desc){
       &hStride,
       &wStride));
    assert(dataType == CUDNN_DATA_FLOAT);
-   std::cout << "Tensor descriptor dims (batch, feature, y, x): " << n << ", " << c << ", " << h << ", " << w << "\n";
+   std::cout << "Tensor descriptor dims (batch, y, x, feature): " << n << ", " << h << ", " << w << ", " << c << "\n";
+}
+
+inline void cudnnPrintFilterDesc(cudnnFilterDescriptor_t desc){
+   cudnnDataType_t dataType;
+   int k, c, h, w;
+   CudnnError(cudnnGetFilter4dDescriptor(desc,
+      &dataType, //dataType
+      &k, //outputFeatures
+      &c, //inputFeatures
+      &h, //height
+      &w //width
+      ));
+   assert(dataType == CUDNN_DATA_FLOAT);
+   std::cout << "Tensor descriptor dims (kernels, y, x, feature): " << k << ", " << h << ", " << w << ", " << c << "\n";
 }
 
 inline void cudnnPrintConvDesc(cudnnConvolutionDescriptor_t desc){

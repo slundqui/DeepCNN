@@ -40,9 +40,9 @@ public:
    virtual int updateWeights(int timestep){return SUCCESS;}
    virtual int deliver(){return SUCCESS;}
 
-protected:
    BaseLayer* prevLayer;
    BaseLayer* nextLayer;
+protected:
    int nyp, nxp, nfp, xstride, ystride;
 private:
 };
