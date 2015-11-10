@@ -50,12 +50,16 @@ int Convolution::initialize(){
       nxp) //Width of each filter
    );
 
+   //Needed to make layer size defined by stride only
+   int pady = ystride % 2 == 0 ? (nyp-1)/2 : (nyp/2);
+   int padx = xstride % 2 == 0 ? (nxp-1)/2 : (nxp/2);
+
    //Set up convolution descriptor
    if(DEBUG) std::cout << "Connection " << name << " setting cudnn conv descrptor with " << ystride << ", " << xstride << "\n";
    CudnnError(cudnnCreateConvolutionDescriptor(&convDescriptor));
    CudnnError(cudnnSetConvolution2dDescriptor(convDescriptor,
-      (nyp-1)/2, //Padding height, makes layer size independent of patch size
-      (nxp-1)/2,  //Padding width
+      pady, //Padding height, makes layer size independent of patch size
+      padx,  //Padding width
       ystride, //Vertical filter stride
       xstride, //Horizontal filter stride
       1, 1, //upscale the input in x/y direction

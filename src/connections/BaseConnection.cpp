@@ -21,6 +21,16 @@ int BaseConnection::setParams(Column* c, std::string connName, int in_nyp, int i
    nfp = in_nfp;
    ystride = in_ystride;
    xstride = in_xstride;
+
+   //If stride is odd, patch size must also be odd (for making a layer with a stride of 1 be the same size)
+   if(ystride % 2 != 0 && nyp % 2 == 0){
+      std::cout << "Error: Connection " << name << " has an odd y stride, so the patch size must also be odd\n";
+      exit(BAD_PARAM);
+   }
+   if(xstride % 2 != 0 && nxp % 2 == 0){
+      std::cout << "Error: Connection " << name << " has an odd y stride, so the patch size must also be odd\n";
+      exit(BAD_PARAM);
+   }
    return SUCCESS;
 }
 
