@@ -70,12 +70,12 @@ int BaseLayer::initialize(){
 
    gpuDataSize = bSize * ySize * xSize * fSize * sizeof(float);
 
-   //Create descriptor objects for both input and output buffers
-   CudnnError(cudnnCreateTensorDescriptor(&cudnnADescriptor));
-   CudnnError(cudnnCreateTensorDescriptor(&cudnnGDescriptor));
+   //Create descriptor objects for layer buffers
+   CudnnError(cudnnCreateTensorDescriptor(&layerDescriptor));
+   //CudnnError(cudnnCreateTensorDescriptor(&cudnnGDescriptor));
 
    if(DEBUG) std::cout << "Layer " << name << " setting descriptors " << bSize << ", " << fSize << ", " << ySize << ", " << xSize << "\n";
-   CudnnError(cudnnSetTensor4dDescriptor(cudnnADescriptor,
+   CudnnError(cudnnSetTensor4dDescriptor(layerDescriptor,
       CUDNN_TENSOR_NCHW, //Ordering
       CUDNN_DATA_FLOAT, //Type
       bSize, //Number of images
@@ -84,14 +84,14 @@ int BaseLayer::initialize(){
       xSize) //Width of each feature map
    ); 
 
-   CudnnError(cudnnSetTensor4dDescriptor(cudnnGDescriptor,
-      CUDNN_TENSOR_NCHW, //Ordering
-      CUDNN_DATA_FLOAT, //Type
-      bSize, //Number of images
-      fSize, //Number of feature maps per image
-      ySize, //Height of each feature map
-      xSize) //Width of each feature map
-   ); 
+   //CudnnError(cudnnSetTensor4dDescriptor(cudnnGDescriptor,
+   //   CUDNN_TENSOR_NCHW, //Ordering
+   //   CUDNN_DATA_FLOAT, //Type
+   //   bSize, //Number of images
+   //   fSize, //Number of feature maps per image
+   //   ySize, //Height of each feature map
+   //   xSize) //Width of each feature map
+   //); 
 
    return SUCCESS;
 }
@@ -109,11 +109,16 @@ int BaseLayer::allocate(){
 }
 
 int BaseLayer::forwardUpdate(int timestep){
-   prevConn->deliver();
+   prevConn->forwardDeliver();
    return SUCCESS;
 }
 
 int BaseLayer::backwardsUpdate(int timestep){
+   if(!nextConn){
+      //TODO return error, but for now, its okay to not do backwards pass
+      return SUCCESS;
+   }
+   nextConn->backwardDeliver();
    return SUCCESS;
 }
 

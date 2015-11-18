@@ -11,10 +11,13 @@
 
 Convolution::Convolution(){
    d_WData = NULL;
-   loadFilename = "";
-   initVal = 0;
+   weightLoadFilename = "";
+   weightInitVal = 0;
+   biasLoadFilename = "";
+   biasInitVal = 0;
    workspaceSize = 0;
    d_workspaceMem = NULL;
+   biasDataSize = 0;
 }
 
 Convolution::~Convolution(){
@@ -24,11 +27,15 @@ Convolution::~Convolution(){
    }
 }
 
-int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_initVal, std::string in_loadFilename){
+int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename){
    weightInitType = in_weightInitType;
    assert(weightInitType == 0 || weightInitType == 1);
-   initVal = in_initVal;
-   loadFilename = in_loadFilename;
+   weightInitVal = in_weightInitVal;
+   weightLoadFilename = in_weightLoadFilename;
+   biasInitType = in_biasInitType;
+   assert(biasInitType == 0 || biasInitType == 1);
+   biasInitVal = in_biasInitVal;
+   biasLoadFilename = in_biasLoadFilename;
    return BaseConnection::setParams(c, connName, in_nyp, in_nxp, in_nfp, in_ystride, in_xstride);
 }
 
@@ -50,6 +57,18 @@ int Convolution::initialize(){
       nxp) //Width of each filter
    );
 
+   //Set up bias descriptor
+   //One bias per output featuremap
+   CudnnError(cudnnCreateTensorDescriptor(&biasDescriptor));
+   CudnnError(cudnnSetTensor4dDescriptor(biasDescriptor,
+      CUDNN_TENSOR_NCHW, //Ordering
+      CUDNN_DATA_FLOAT, //Type
+      1, //Number of images
+      nfp, //Number of feature maps per image
+      1, //Height of each feature map
+      1//Width of each feature map
+   ));
+
    //Needed to make layer size defined by stride only
    int pady = ystride % 2 == 0 ? (nyp-1)/2 : (nyp/2);
    int padx = xstride % 2 == 0 ? (nxp-1)/2 : (nxp/2);
@@ -68,6 +87,7 @@ int Convolution::initialize(){
 
    //Set size for this layer
    gpuDataSize = prevLayer->getFSize() * nyp * nxp * nfp * sizeof(float);
+   biasDataSize = nfp * sizeof(float);
 
    return SUCCESS;
 }
@@ -76,12 +96,13 @@ int Convolution::allocate(){
    //Calculate and set up best forward conv algorithm to use
    cudnnHandle_t handle = col->getCudnnHandle();
 
+   size_t forward_workspaceSize;
    CudnnError(cudnnGetConvolutionForwardAlgorithm(
       handle,
-      prevLayer->getDataDescriptor(),
+      prevLayer->getLayerDescriptor(),
       filterDescriptor,
       convDescriptor,
-      nextLayer->getDataDescriptor(),
+      nextLayer->getLayerDescriptor(),
       //TODO make sure we have enough workspace size
       //CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
       //CUDNN_CONVOLUTION_FWD_NO_WORKSPACE,
@@ -92,18 +113,50 @@ int Convolution::allocate(){
 
    CudnnError(cudnnGetConvolutionForwardWorkspaceSize(
       handle,
-      prevLayer->getDataDescriptor(),
+      prevLayer->getLayerDescriptor(),
       filterDescriptor,
       convDescriptor,
-      nextLayer->getDataDescriptor(),
+      nextLayer->getLayerDescriptor(),
       convAlgo,
-      &workspaceSize));
+      &forward_workspaceSize));
 
+   ////Calculate and set up best backward conv altorithm to use for finding gradient vals
+   //CudnnError(cudnnGetConvolutionBackwardDataAlgorithm(
+   //   handle,
+   //   filterDescriptor,
+   //   nextLayer->getLayerDescriptor(),
+   //   prevLayer->getLayerDescriptor(),
+   //   convDescriptor,
+
+
+
+
+   //));
+
+   ////Calculate and set up best backward conv algorithm to use for updating weights
+   //CudnnError(cudnnGetConvolutionBackwardFilterAlgorithm(
+   //   handle,
+   //   nextLayer->getGradientDescriptor(),
+   //   prevLayer->getGradientDescriptor(),
+   //   convDescriptor,
+
+
+
+
+   //));
+
+   //TODO find maximum of workspace sizes
+   workspaceSize = forward_workspaceSize;
+
+   //Allocate weights and bias
    CudaError(cudaMalloc(&d_WData, gpuDataSize));
+   CudaError(cudaMalloc(&d_Bias, biasDataSize));
+
    CudaError(cudaMalloc(&d_workspaceMem, workspaceSize));
 
    //Initialize data
    assert(initializeWeights() == SUCCESS);
+   assert(initializeBias() == SUCCESS);
 
    return SUCCESS;
 }
@@ -120,17 +173,27 @@ float* Convolution::getHostW(){
    return h_outMem;
 }
 
+float* Convolution::getHostBias(){
+   size_t memSize = nfp * sizeof(float);
+   assert(memSize == biasDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(biasDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_Bias, biasDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
+}
+
 int Convolution::initializeWeights(){
    int inNf = prevLayer->getFSize();
 
    if(weightInitType == 0){ //uniform weights
       int count = nfp * inNf * nyp * nxp;
-      setArray(d_WData, count, initVal);
+      setArray(d_WData, count, weightInitVal);
    }
    else if(weightInitType == 1){
       int nDims;
       size_t * dims;
-      readDataToDevice(loadFilename, d_WData, &nDims, &dims);
+      readDataToDevice(weightLoadFilename, d_WData, &nDims, &dims);
       assert(nDims == 4);
 
       assert(dims[0] == (size_t)nfp);
@@ -145,12 +208,31 @@ int Convolution::initializeWeights(){
    return SUCCESS;
 }
 
+int Convolution::initializeBias(){
+   if(biasInitType == 0){ //uniform weights
+      int count = nfp;
+      setArray(d_Bias, count, biasInitVal);
+   }
+   else if(biasInitType == 1){
+      int nDims;
+      size_t * dims;
+      readDataToDevice(biasLoadFilename, d_Bias, &nDims, &dims);
+      assert(nDims == 1);
+      assert(dims[0] == (size_t)nfp);
+   }
+   else{
+      std::cerr << "Bias init type of " << biasInitType << " not recognized\n";
+      exit(BAD_PARAM);
+   }
+   return SUCCESS;
+}
+
 
 int Convolution::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    //int bSize = col->getBSize();
    int tempBSize;
 
-   cudnnTensorDescriptor_t inputDesc = prevLayer->getDataDescriptor();
+   cudnnTensorDescriptor_t inputDesc = prevLayer->getLayerDescriptor();
 
    //Query output layout and check with PV layout
    CudnnError(cudnnGetConvolution2dForwardOutputDim(
@@ -172,13 +254,13 @@ int Convolution::updateWeights(int timestep){
    return SUCCESS;
 }
 
-int Convolution::deliver(){
+int Convolution::forwardDeliver(){
    if(DEBUG) std::cout << "Convolution deliver called\n";
 
    cudnnHandle_t handle = col->getCudnnHandle();
-   cudnnTensorDescriptor_t inputDesc = prevLayer->getDataDescriptor();
+   cudnnTensorDescriptor_t inputDesc = prevLayer->getLayerDescriptor();
    float* inputPtr = prevLayer->getDeviceA();
-   cudnnTensorDescriptor_t outputDesc = nextLayer->getDataDescriptor();
+   cudnnTensorDescriptor_t outputDesc = nextLayer->getLayerDescriptor();
    float* outputPtr = nextLayer->getDeviceA();
 
    float alpha = 1; //input scaling
@@ -201,6 +283,43 @@ int Convolution::deliver(){
       outputPtr //Output pointer
    ));
 
+   //Add bias
+   CudnnError(cudnnAddTensor(
+      handle, //cudnnHandle
+      CUDNN_ADD_SAME_C,
+      &alpha,
+      biasDescriptor, //bias descriptor
+      d_Bias, //bias pointer
+      &alpha,
+      outputDesc, //Output descriptor
+      outputPtr //Output pointer
+   ));
+
+   return SUCCESS;
+}
+
+int Convolution::backwardDeliver(){
+   //cudnnHandle_t handle = col->getCudnnHandle();
+   //cudnnTensorDescriptor_t inputDesc = nextLayer->getGradientDescriptor();
+   //float* inputPtr = nextLayer->getDeviceG();
+   //cudnnTensorDescriptor_t outputDesc = prevLayer->getGradientDescriptor();
+   //float* outputPtr = prevLayer->getDeviceG();
+
+   //float alpha = 1; //input scaling
+   //float beta = 0; //output scaling, 0 means do not scale
+
+   //CudaError(cudaDeviceSynchronize());
+   //CudnnError(cudnnConvolutionBackwardFilter_v3(
+   //   handle, //cudnn handle
+   //   &alpha, //Input scaling factor
+   //   inputDesc, //Input descriptor
+   //   inputPtr, //Input pointer
+   //   outputDesc, //Output descriptor
+   //   outputPtr, //Output pointer
+   //   convDescriptor, //Convolution descriptor
+   //   
+
+   //));
    return SUCCESS;
 }
 

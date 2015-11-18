@@ -38,7 +38,8 @@ public:
    BaseLayer* getPrev(){return prevLayer;};
    BaseLayer* getNext(){return nextLayer;};
    virtual int updateWeights(int timestep){return SUCCESS;}
-   virtual int deliver(){return SUCCESS;}
+   virtual int forwardDeliver(){return SUCCESS;}
+   virtual int backwardDeliver(){return SUCCESS;}
 
    BaseLayer* prevLayer;
    BaseLayer* nextLayer;

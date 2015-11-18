@@ -47,16 +47,16 @@ public:
    int getXSize(){return xSize;}
    int getFSize(){return fSize;}
 
-   cudnnTensorDescriptor_t getDataDescriptor(){return cudnnADescriptor;}
-   cudnnTensorDescriptor_t getGradientDescriptor(){return cudnnGDescriptor;}
+   cudnnTensorDescriptor_t getLayerDescriptor(){return layerDescriptor;}
+   //cudnnTensorDescriptor_t getGradientDescriptor(){return cudnnGDescriptor;}
 
 protected:
    float * d_AData; //Feedforward activity buffer
    float * d_GData; //Backpass gradient buffer
    //float * h_AData; //Host memory
    int bSize, ySize, xSize, fSize;
-   cudnnTensorDescriptor_t cudnnADescriptor;
-   cudnnTensorDescriptor_t cudnnGDescriptor;
+   cudnnTensorDescriptor_t layerDescriptor;
+   //cudnnTensorDescriptor_t cudnnGDescriptor;
    virtual int setSize();
 
 private:
