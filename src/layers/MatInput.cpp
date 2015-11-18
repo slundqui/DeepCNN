@@ -15,6 +15,7 @@ MatInput::MatInput()
 }
 
 MatInput::~MatInput(){
+   free(h_data);
 }
 
 int MatInput::setParams(Column* c, std::string layerName, int in_ySize, int in_xSize, int num_features, std::string in_name){
