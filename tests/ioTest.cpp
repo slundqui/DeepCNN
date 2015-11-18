@@ -1,21 +1,23 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include <src/utils.hpp>
-#include <src/layers/Image.hpp>
+#include <src/layers/MatInput.hpp>
 #include <connections/Convolution.hpp>
 
 //Fixture for testing auto size generation
 class mat_fileio: public ::testing::Test{
    protected:
       virtual void SetUp(){
-         myCol = new Column(3, //batch
-                            16, //ny
-                            8); //nx
-         input = new Image();
+         myCol = new Column(3 //batch
+                            );
+
+         input = new MatInput();
          input->setParams(myCol, //column name
                                "input", //name
+                               16, //ny
+                               8, //nx
                                1, //features
-                               "/home/sheng/workspace/DeepCNN/tests/testImgs/square_16x8x1.txt");//list of images
+                               "/home/sheng/workspace/DeepCNN/tests/testMats/idxcount_8x16x1x5.mat");//input mat
 
          conv = new Convolution();
          conv->setParams(myCol, //column
@@ -27,7 +29,7 @@ class mat_fileio: public ::testing::Test{
                          2, //xstride
                          1, //from file init val
                          0, //initVal, not used
-                         "/home/sheng/workspace/DeepCNN/tests/testWeights/idxcount_5x1x4x2.mat" //filename
+                         "/home/sheng/workspace/DeepCNN/tests/testMats/idxcount_2x4x1x5.mat" //filename
                          );
 
          testLayer = new BaseLayer();
@@ -45,17 +47,41 @@ class mat_fileio: public ::testing::Test{
       }
 
       Column* myCol;
-      Image* input;
+      MatInput* input;
       BaseLayer* testLayer;
       Convolution* conv;
 };
 
 //For reading a mat 
+TEST_F(mat_fileio, loadMat){
+   myCol->initialize();
+   float* h_AData = input->getHostA();
+   for(int i = 0; i < 8*16*3; i++){
+      ASSERT_EQ(h_AData[i], i+1);
+   }
+
+   //Run to update mats
+   free(h_AData);
+   myCol->run(2);
+   h_AData = input->getHostA();
+   int offset = 8*16*3;
+   //First 2 batches should continue counting
+   for(int i = 0; i < 8*16*2; i++){
+      ASSERT_EQ(h_AData[i], offset+i+1);
+   }
+   //Last batch should have been reset
+   offset = 8*16*2;
+   for(int i = 0; i < 8*16; i++){
+      ASSERT_EQ(h_AData[offset+i], i+1);
+   }
+
+}
+
 TEST_F(mat_fileio, loadWeights){
    myCol->initialize();
    float* h_WData = conv->getHostW();
    for(int i = 0; i < 4*2*5; i++){
-      ASSERT_EQ(h_WData[i], i);
+      ASSERT_EQ(h_WData[i], i+1);
    }
    free(h_WData);
 }
@@ -80,7 +106,8 @@ TEST(mattest, matTest){
 
    CudaError(cudaMemcpy(d_data, h_data, nb*nf*nx*ny*sizeof(float), cudaMemcpyHostToDevice));
    cudaDeviceSynchronize();
-   size_t array_dim[4] = {(size_t)nb, (size_t)nf, (size_t)ny, (size_t)nx};
+   //Matlab arrays spin from fastest to slowest
+   size_t array_dim[4] = {(size_t)nx, (size_t)ny, (size_t)nf, (size_t)nb};
 
    writeDeviceData(outName, 4, array_dim, d_data);
 
@@ -93,10 +120,10 @@ TEST(mattest, matTest){
    readDataToDevice(outName, d_outdata, &numDim, &dims);
 
    EXPECT_EQ(numDim, 4);
-   EXPECT_EQ(dims[0], 2);
-   EXPECT_EQ(dims[1], 3);
-   EXPECT_EQ(dims[2], 5);
-   EXPECT_EQ(dims[3], 7);
+   EXPECT_EQ(dims[0], 7);
+   EXPECT_EQ(dims[1], 5);
+   EXPECT_EQ(dims[2], 3);
+   EXPECT_EQ(dims[3], 2);
 
    CudaError(cudaMemcpy(h_outdata, d_outdata, nb*nf*nx*ny*sizeof(float), cudaMemcpyDeviceToHost));
 

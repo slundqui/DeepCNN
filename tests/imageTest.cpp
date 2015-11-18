@@ -8,24 +8,26 @@ class ImageTests: public ::testing::Test {
    protected:
       virtual void SetUp(){
          //::testing::FLAGS_gtest_death_test_style = "threadsafe"; //To suppress test warning
-         singleCol = new Column(1, //batch
-                                5, //ny
-                                4);//nx
+         singleCol = new Column(1 //batch
+                                );
 
-         batchCol = new Column(4,  //batch
-                               5,  //ny
-                               4); //nx
+         batchCol = new Column(4  //batch
+                               );
 
          imageLayerSingle = new Image();
          imageLayerSingle->setParams(singleCol,
                                "input",
+                               5, //ny
+                               4, //nx
                                3, //features
                                "/home/sheng/workspace/DeepCNN/tests/testImgs/idxcount_5x4x3.txt");//list of images
 
          imageLayerBatch = new Image();
          imageLayerBatch->setParams(batchCol,
                                "input",
-                               3,
+                               5, //ny
+                               4, //nx
+                               3, //features
                                "/home/sheng/workspace/DeepCNN/tests/testImgs/idxcount_5x4x3.txt");//list of images
 
          //Add to columns

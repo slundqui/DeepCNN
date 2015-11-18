@@ -16,10 +16,10 @@ Image::~Image(){
    listFile.close();
 }
 
-int Image::setParams(Column* c, std::string layerName, int num_features, std::string inList){
+int Image::setParams(Column* c, std::string layerName, int in_ySize, int in_xSize, int num_features, std::string inList){
    filenameList = inList;
-   ySize = c->getYSize();
-   xSize = c->getXSize();
+   ySize = in_ySize;
+   xSize = in_xSize;
    fSize = num_features;
    return BaseLayer::setParams(c, layerName);
 }

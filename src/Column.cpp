@@ -6,14 +6,15 @@
 #include "Column.hpp"
 #include "utils.hpp"
 
-Column::Column(int in_bSize, int in_ySize, int in_xSize)
+Column::Column(int in_bSize)
 {
    //initialize();
    bSize = in_bSize;
-   xSize = in_xSize;
-   ySize = in_ySize;
+   //xSize = in_xSize;
+   //ySize = in_ySize;
    timestep = 0;
    totalGpuSize = 0;
+   groundTruthLayer = NULL;
 
    query_device(0);
    CudnnError(cudnnCreate(&cudnn_handle));
@@ -44,6 +45,17 @@ void Column::query_device(int id)
 
 Column::~Column(){
    CudnnError(cudnnDestroy((cudnnHandle_t)cudnn_handle));
+}
+
+int Column::addGroundTruth(BaseLayer* inLayer){
+   assert(inLayer);
+   if(!inLayer->isParamsSet()){
+      std::cerr << "Error! Layer did not set parameters before trying to add layer to column\n";
+      exit(UNDEFINED_PARAMS);
+   }
+   groundTruthLayer = inLayer;
+
+   return SUCCESS;
 }
 
 int Column::addLayer(BaseLayer* inLayer){
@@ -114,6 +126,11 @@ int Column::initialize(){
    for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
       (*it)->allocate();
    }
+   if(groundTruthLayer){
+      groundTruthLayer->initialize();
+      groundTruthLayer->allocate();
+      totalGpuSize += groundTruthLayer->getGpuDataSize();
+   }
    return SUCCESS;
 }
 
@@ -125,6 +142,12 @@ int Column::run(int numTimesteps){
             connIt != connList.end(); ++connIt){
          (*connIt)->updateWeights(timestep);
       }
+      //Update ground truth layer first
+      if(groundTruthLayer){
+         groundTruthLayer->forwardUpdate(timestep);
+         //No backward pass needed
+      }
+      
       //Update all layers (feedforward)
       for(std::vector<BaseLayer*>::iterator layerIt = layerList.begin();
             layerIt != layerList.end(); ++layerIt){
@@ -146,9 +169,5 @@ int Column::initAndRun(int numTimesteps){
    run(numTimesteps);
    return SUCCESS;
 }
-
-
-
-
 
 

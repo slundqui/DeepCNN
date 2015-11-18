@@ -84,15 +84,6 @@ int BaseLayer::initialize(){
       xSize) //Width of each feature map
    ); 
 
-   //CudnnError(cudnnSetTensor4dDescriptor(cudnnGDescriptor,
-   //   CUDNN_TENSOR_NCHW, //Ordering
-   //   CUDNN_DATA_FLOAT, //Type
-   //   bSize, //Number of images
-   //   fSize, //Number of feature maps per image
-   //   ySize, //Height of each feature map
-   //   xSize) //Width of each feature map
-   //); 
-
    return SUCCESS;
 }
 

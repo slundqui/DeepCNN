@@ -42,7 +42,9 @@ protected:
    cudnnTensorDescriptor_t biasDescriptor;
 
    cudnnConvolutionDescriptor_t convDescriptor;
-   cudnnConvolutionFwdAlgo_t convAlgo;
+   cudnnConvolutionFwdAlgo_t forwardConvAlgo;
+   cudnnConvolutionBwdFilterAlgo_t backwardFilterAlgo;
+   cudnnConvolutionBwdDataAlgo_t backwardDataAlgo;
 
    size_t workspaceSize;
    void* d_workspaceMem;
@@ -60,6 +62,10 @@ protected:
 
    float* d_WData;
    float* d_Bias;
+
+   //Gradients of weights and biases
+   float* d_GWData;
+   float* d_GBias;
 
 };
 #endif 

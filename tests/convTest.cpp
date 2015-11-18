@@ -8,23 +8,25 @@
 class convTests: public ::testing::Test{
    protected:
       virtual void SetUp(){
-         myColNoBias = new Column(1, //batch
-                            16, //ny
-                            8); //nx
+         myColNoBias = new Column(1 //batch
+                            );
 
-         myColBias = new Column(1, //batch
-                            16, //ny
-                            8); //nx
+         myColBias = new Column(1 //batch
+                            );
 
          inputNoBias = new Image();
          inputNoBias->setParams(myColNoBias, //column name
                                "input", //name
+                               16, //ny
+                               8, //nx
                                1, //features
                                "/home/sheng/workspace/DeepCNN/tests/testImgs/square_16x8x1.txt");//list of images
 
          inputBias = new Image();
          inputBias->setParams(myColBias, //column name
                                "input", //name
+                               16, //ny
+                               8, //nx
                                1, //features
                                "/home/sheng/workspace/DeepCNN/tests/testImgs/square_16x8x1.txt");//list of images
 

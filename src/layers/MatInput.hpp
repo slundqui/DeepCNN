@@ -1,26 +1,20 @@
 /**
- * Image.hpp
+ * MatInput.hpp
  *
  * Author: Sheng Lundquist
  **/
-#ifndef IMAGE_HPP_ 
-#define IMAGE_HPP_ 
-
-//Defined for CImg to not need additional libraries
-#define cimg_display 0
+#ifndef MATINPUT_HPP_ 
+#define MATINPUT_HPP_ 
 
 #include "includes.hpp"
 #include "BaseLayer.hpp"
-#include "CImg.h"
 #include "../Column.hpp"
 #include <fstream>
 
-using namespace cimg_library;
-
-class Image: public BaseLayer {
+class MatInput: public BaseLayer {
 public:
-   Image();
-   virtual ~Image();
+   MatInput();
+   virtual ~MatInput();
    virtual int initialize();
    virtual int allocate();
    virtual int setParams(
@@ -29,14 +23,18 @@ public:
          int in_ySize,
          int in_xSize,
          int num_features,
-         std::string inList);
+         std::string in_name);
    virtual int forwardUpdate(int timestep);
    virtual int backwardsUpdate(int timestep);
 protected:
    virtual int setSize();
-   int loadImage(std::string filename, int batchIdx);
-   std::string filenameList;
-   std::ifstream listFile;
+   int loadMatInput();
+   std::string matFilename;
+   int readMat();
+   float* h_data;
+   int numExamples;
+   int exampleIdx;
+   
    
 
 

@@ -8,7 +8,7 @@ class ListTests: public ::testing::Test {
    protected:
       virtual void SetUp(){
          ::testing::FLAGS_gtest_death_test_style = "threadsafe"; //To suppress test warning
-         myCol = new Column(1, 1, 1);
+         myCol = new Column(1);
 
          myLayer0 = new BaseLayer();
          myLayer0->setParams(myCol, "layer0");

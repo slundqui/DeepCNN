@@ -11,6 +11,9 @@
 
 Convolution::Convolution(){
    d_WData = NULL;
+   d_Bias = NULL;
+   d_GWData = NULL;
+   d_GBias = NULL;
    weightLoadFilename = "";
    weightInitVal = 0;
    biasLoadFilename = "";
@@ -22,6 +25,9 @@ Convolution::Convolution(){
 
 Convolution::~Convolution(){
    CudaError(cudaFree(d_WData));
+   CudaError(cudaFree(d_Bias));
+   CudaError(cudaFree(d_GWData));
+   CudaError(cudaFree(d_GBias));
    if(d_workspaceMem){
       CudaError(cudaFree(d_workspaceMem));
    }
@@ -93,9 +99,10 @@ int Convolution::initialize(){
 }
 
 int Convolution::allocate(){
-   //Calculate and set up best forward conv algorithm to use
    cudnnHandle_t handle = col->getCudnnHandle();
 
+   //Calculate and set up best conv algorithms to use
+   //Forward pass
    size_t forward_workspaceSize;
    CudnnError(cudnnGetConvolutionForwardAlgorithm(
       handle,
@@ -108,7 +115,7 @@ int Convolution::allocate(){
       //CUDNN_CONVOLUTION_FWD_NO_WORKSPACE,
       CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
       0,
-      &convAlgo
+      &forwardConvAlgo
    ));
 
    CudnnError(cudnnGetConvolutionForwardWorkspaceSize(
@@ -117,40 +124,66 @@ int Convolution::allocate(){
       filterDescriptor,
       convDescriptor,
       nextLayer->getLayerDescriptor(),
-      convAlgo,
+      forwardConvAlgo,
       &forward_workspaceSize));
 
-   ////Calculate and set up best backward conv altorithm to use for finding gradient vals
-   //CudnnError(cudnnGetConvolutionBackwardDataAlgorithm(
-   //   handle,
-   //   filterDescriptor,
-   //   nextLayer->getLayerDescriptor(),
-   //   prevLayer->getLayerDescriptor(),
-   //   convDescriptor,
 
+   //Backward filter gradient
+   size_t backward_filter_workspaceSize;
+   CudnnError(cudnnGetConvolutionBackwardFilterAlgorithm(
+      handle, 
+      prevLayer->getLayerDescriptor(), //Source descriptor (prev layer activation)
+      nextLayer->getLayerDescriptor(), //Diff descriptor (Next layer gradient)
+      convDescriptor, //Convolution descriptor
+      filterDescriptor, //weight gradient descriptor
+      //TODO make sure we have enough workspace size
+      CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST, 
+      0,
+      &backwardFilterAlgo
+   ));
 
+   CudnnError(cudnnGetConvolutionBackwardFilterWorkspaceSize(
+      handle,
+      prevLayer->getLayerDescriptor(), //Source descriptor (prev layer activaiton)
+      nextLayer->getLayerDescriptor(), //Diff descriptor (Next layer gradient)
+      convDescriptor, //Convolution descriptor
+      filterDescriptor, //weight gradient descriptor
+      backwardFilterAlgo, //Algorithm
+      &backward_filter_workspaceSize
+   ));
 
+   //Backward data gradient
+   size_t backward_data_workspaceSize;
+   CudnnError(cudnnGetConvolutionBackwardDataAlgorithm(
+      handle,
+      filterDescriptor, //Filter descriptor
+      nextLayer->getLayerDescriptor(), //Diff descriptor (Next layer gradient)
+      convDescriptor, //Convolution descriptor
+      prevLayer->getLayerDescriptor(), //Output gradient descriptor (prev layer gradient)
+      CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
+      0, 
+      &backwardDataAlgo
+   ));
 
-   //));
+   CudnnError(cudnnGetConvolutionBackwardDataWorkspaceSize(
+      handle,
+      filterDescriptor, //Filter descriptor
+      nextLayer->getLayerDescriptor(), //Diff descriptor (Next layer gradient)
+      convDescriptor, //Convolution descriptor
+      prevLayer->getLayerDescriptor(), //Output gradient descriptor (prev layer gradient)
+      backwardDataAlgo, //Algorithm
+      &backward_data_workspaceSize
+   ));
 
-   ////Calculate and set up best backward conv algorithm to use for updating weights
-   //CudnnError(cudnnGetConvolutionBackwardFilterAlgorithm(
-   //   handle,
-   //   nextLayer->getGradientDescriptor(),
-   //   prevLayer->getGradientDescriptor(),
-   //   convDescriptor,
-
-
-
-
-   //));
-
-   //TODO find maximum of workspace sizes
-   workspaceSize = forward_workspaceSize;
+   //Find maximum of workspace sizes
+   workspaceSize = forward_workspaceSize > backward_filter_workspaceSize ? forward_workspaceSize: backward_filter_workspaceSize;
+   workspaceSize = workspaceSize > backward_data_workspaceSize ? workspaceSize : backward_data_workspaceSize;
 
    //Allocate weights and bias
    CudaError(cudaMalloc(&d_WData, gpuDataSize));
+   CudaError(cudaMalloc(&d_GWData, gpuDataSize));
    CudaError(cudaMalloc(&d_Bias, biasDataSize));
+   CudaError(cudaMalloc(&d_GBias, biasDataSize));
 
    CudaError(cudaMalloc(&d_workspaceMem, workspaceSize));
 
@@ -196,10 +229,10 @@ int Convolution::initializeWeights(){
       readDataToDevice(weightLoadFilename, d_WData, &nDims, &dims);
       assert(nDims == 4);
 
-      assert(dims[0] == (size_t)nfp);
-      assert(dims[1] == (size_t)inNf);
-      assert(dims[2] == (size_t)nyp);
-      assert(dims[3] == (size_t)nxp);
+      assert(dims[0] == (size_t)nxp); //Fastest
+      assert(dims[1] == (size_t)nyp);
+      assert(dims[2] == (size_t)inNf);
+      assert(dims[3] == (size_t)nfp); //Slowest
    }
    else{
       std::cerr << "Weight init type of " << weightInitType << " not recognized\n";
@@ -275,7 +308,7 @@ int Convolution::forwardDeliver(){
       filterDescriptor, //Filter descriptor
       d_WData, //Filter pointer
       convDescriptor, //Convolution descriptor
-      convAlgo, //Convolution algorithm
+      forwardConvAlgo, //Convolution algorithm
       d_workspaceMem, //Workspace memory TODO
       workspaceSize, //Workspace size
       &beta, //Output scaling factor
@@ -299,27 +332,71 @@ int Convolution::forwardDeliver(){
 }
 
 int Convolution::backwardDeliver(){
-   //cudnnHandle_t handle = col->getCudnnHandle();
-   //cudnnTensorDescriptor_t inputDesc = nextLayer->getGradientDescriptor();
-   //float* inputPtr = nextLayer->getDeviceG();
-   //cudnnTensorDescriptor_t outputDesc = prevLayer->getGradientDescriptor();
-   //float* outputPtr = prevLayer->getDeviceG();
+   //if(DEBUG) std::cout << "Convolution gradient called\n";
+   std::cout << "Convolution gradient called\n";
 
-   //float alpha = 1; //input scaling
-   //float beta = 0; //output scaling, 0 means do not scale
+   cudnnHandle_t handle = col->getCudnnHandle();
+   cudnnTensorDescriptor_t srcDesc = prevLayer->getLayerDescriptor();
+   float* srcPtr = prevLayer->getDeviceA();
+   cudnnTensorDescriptor_t diffDesc = nextLayer->getLayerDescriptor();
+   float* diffPtr = nextLayer->getDeviceG();
 
-   //CudaError(cudaDeviceSynchronize());
-   //CudnnError(cudnnConvolutionBackwardFilter_v3(
-   //   handle, //cudnn handle
-   //   &alpha, //Input scaling factor
-   //   inputDesc, //Input descriptor
-   //   inputPtr, //Input pointer
-   //   outputDesc, //Output descriptor
-   //   outputPtr, //Output pointer
-   //   convDescriptor, //Convolution descriptor
-   //   
+   cudnnTensorDescriptor_t outputDesc = prevLayer->getLayerDescriptor();
+   float* outputPtr = prevLayer->getDeviceG();
 
-   //));
+   float alpha = 1; //input scaling
+   float beta = 0; //output scaling, 0 means do not scale
+
+   CudaError(cudaDeviceSynchronize());
+   //Bias gradient calculation
+   CudnnError(cudnnConvolutionBackwardBias(
+      handle,
+      &alpha,
+      srcDesc, //Prev layer's activations
+      srcPtr,
+      &beta,
+      biasDescriptor, //Bias gradient descriptor
+      d_GBias //Bias gradient pointer
+   ));
+
+   //TODO need sync barrier here because of workspace?
+   CudaError(cudaDeviceSynchronize());
+   
+   //Weight gradient calculation
+   CudnnError(cudnnConvolutionBackwardFilter_v3(
+      handle,
+      &alpha,
+      srcDesc, //Prev layer's activations
+      srcPtr,
+      diffDesc, //Next layer's gradient
+      diffPtr,
+      convDescriptor, //Conv descriptor
+      backwardFilterAlgo, //Algorithm
+      d_workspaceMem, //Workspace pointer
+      workspaceSize, //Workspace size
+      &beta,
+      filterDescriptor, //Weight gradient descriptor
+      d_GWData //Weight gradient pointer
+   ));
+   CudaError(cudaDeviceSynchronize());
+
+   //Data gradient calculation (backpass to previous layer)
+   CudnnError(cudnnConvolutionBackwardData_v3(
+      handle,
+      &alpha,
+      filterDescriptor, //Weights 
+      d_WData,
+      diffDesc, //Next layer's gradient
+      diffPtr,
+      convDescriptor, //Conv descriptor
+      backwardDataAlgo, //Algorithm
+      d_workspaceMem, //Workspace pointer
+      workspaceSize, //Workspace size
+      &beta,
+      outputDesc, //Prev layer gradient desc
+      outputPtr //Prev layer gradient pointer
+   ));
+
    return SUCCESS;
 }
 

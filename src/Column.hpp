@@ -12,13 +12,14 @@
 
 class Column{
 public:
-   Column(int in_bSize, int in_ySize, int in_xSize);
+   Column(int in_bSize);
    virtual ~Column();
    int addLayer(BaseLayer* inLayer);
    int addConn(BaseConnection* inConn);
+   int addGroundTruth(BaseLayer* inLayer);
    int getBSize(){return bSize;}
-   int getXSize(){return xSize;}
-   int getYSize(){return ySize;}
+   //int getXSize(){return xSize;}
+   //int getYSize(){return ySize;}
 
    virtual int initialize();
    virtual int run(int numTimesteps);
@@ -30,10 +31,13 @@ private:
    std::vector<BaseLayer*> layerList;
    std::vector<BaseConnection*> connList;
 
+   //Ground truth layer
+   BaseLayer* groundTruthLayer;
+
    //Run list contains the order in which to achieve forward and backward passes
    std::vector<BaseData*> runList;
 
-   int bSize, xSize, ySize;
+   int bSize;
    int timestep;
 
    //Total size of needed gpu memory
