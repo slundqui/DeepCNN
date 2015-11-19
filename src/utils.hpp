@@ -24,7 +24,7 @@ inline void lastCallError(const char *file, int line, bool term=true){
    gpuAssert(cudaGetLastError(), file, line, term);
 }
 
-inline void printMat(float* array, int nb, int ny, int nx, int nf){
+inline void printMat(const float* array, int nb, int ny, int nx, int nf){
    for(int bi = 0; bi < nb; bi++){
       printf("Batch %d: \n", bi);
 

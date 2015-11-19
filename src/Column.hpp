@@ -17,6 +17,7 @@ public:
    int addLayer(BaseLayer* inLayer);
    int addConn(BaseConnection* inConn);
    int addGroundTruth(BaseLayer* inLayer);
+   BaseLayer* getGroundTruthLayer(){return groundTruthLayer;}
    int getBSize(){return bSize;}
    //int getXSize(){return xSize;}
    //int getYSize(){return ySize;}

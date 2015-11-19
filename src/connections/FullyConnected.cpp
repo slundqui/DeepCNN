@@ -15,7 +15,7 @@ FullyConnected::FullyConnected(){
 FullyConnected::~FullyConnected(){
 }
 
-int FullyConnected::setParams(Column* c, std::string connName, int in_nfp, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename){
+int FullyConnected::setParams(Column* c, std::string connName, int in_nfp, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_decay){
 
    return Convolution::setParams(
          c,
@@ -30,10 +30,13 @@ int FullyConnected::setParams(Column* c, std::string connName, int in_nfp, int i
          in_weightLoadFilename,
          in_biasInitType, //0 means uniform with init_val, 1 means from file with in_loadFilename
          in_biasInitVal,
-         in_biasLoadFilename
+         in_biasLoadFilename,
+         in_plasticity,
+         in_dwRate,
+         in_dbRate,
+         in_decay
    );
 }
-
 
 int FullyConnected::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    //int bSize = col->getBSize();

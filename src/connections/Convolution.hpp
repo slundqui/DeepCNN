@@ -26,8 +26,13 @@ public:
          std::string in_weightLoadFilename = "",
          int in_biasInitType = 0, //0 means uniform with init_val, 1 means from file with in_loadFilename
          float in_biasInitVal = 0,
-         std::string in_biasLoadFilename = ""
+         std::string in_biasLoadFilename = "",
+         int in_plasticity = 0, //learning or not
+         float in_dwRate = .001, //weight learning rate
+         float in_dbRate = .001, //bias learning rate
+         float in_decay = 0 //Decay applied to the weight
          );
+
    virtual int initialize();
    virtual int allocate();
    virtual int updateWeights(int timestep);
@@ -35,7 +40,14 @@ public:
    virtual int backwardDeliver();
    virtual int setNextLayerSize(int* ySize, int* xSize, int* fSize);
    float* getHostW();
-   float* getHostBias();
+   float* getHostB();
+   float* getHostWGradient();
+   float* getHostBGradient();
+   //Sets the flag for plasticity
+   void setGradientCheck(){plasticity = 0; needGrad = 1;}
+   //Sets a weight of a specific index to a specific value
+   int setWeight(int idx, float val);
+   int setBias(int idx, float val);
 
 protected:
    cudnnFilterDescriptor_t filterDescriptor;
@@ -66,6 +78,13 @@ protected:
    //Gradients of weights and biases
    float* d_GWData;
    float* d_GBias;
+
+   //Learning parameters
+   int plasticity;
+   int needGrad;
+   float dwRate;
+   float dbRate;
+   float decay;
 
 };
 #endif 

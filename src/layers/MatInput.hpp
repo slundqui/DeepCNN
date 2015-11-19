@@ -24,6 +24,7 @@ public:
          int in_xSize,
          int num_features,
          std::string in_name);
+   virtual int applyActivation();
    virtual int forwardUpdate(int timestep);
    virtual int backwardsUpdate(int timestep);
 protected:

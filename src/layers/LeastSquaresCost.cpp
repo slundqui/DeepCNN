@@ -1,0 +1,59 @@
+/**
+ * LeastSquaresCost.cpp
+ * Author: Sheng Lundquist
+ **/
+
+#include "LeastSquaresCost.hpp"
+#include "../utils.hpp"
+#include "../cuda_utils.hpp"
+#include <cuda_runtime.h>
+
+extern "C" void leastSqTotalCost(float* estimate, float* truth, int count, int nbatch, float* out, int n_blocks, int block_size);
+extern "C" void calcSizeTotalCost(int* h_block_size, int* h_n_blocks, int fSize);
+extern "C" void leastSqCalcGrad(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
+extern "C" void calcSizeCalcGrad(int* h_block_size, int* h_n_blocks, int batchcount);
+
+LeastSquaresCost::LeastSquaresCost()
+{
+   totalcost_block_size = 0;
+   totalcost_n_blocks = 0;
+}
+
+LeastSquaresCost::~LeastSquaresCost(){
+}
+
+//int LeastCostFunction::setParams(Column* c, std::string layerName, std::string outCostFile, std::string outAccuracyFile){
+//   if(outCostFile != ""){
+//      //TODO open cost file for writing
+//   }
+//   return BaseLayer::setParams(c, layerName);
+//}
+
+int LeastSquaresCost::initialize(){
+   BaseCostFunction::initialize();
+
+   //Currently only allowing 1x1xf connections
+   assert(xSize == 1 && ySize == 1);
+   calcSizeTotalCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize);
+   calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, bSize*fSize);
+
+   return SUCCESS;
+}
+
+int LeastSquaresCost::allocate(){
+   BaseCostFunction::allocate();
+   return SUCCESS;
+}
+
+int LeastSquaresCost::calcTotalCost(){
+   float* truth = col->getGroundTruthLayer()->getDeviceA();
+   leastSqTotalCost(d_AData, truth, fSize * xSize * ySize, bSize, d_TotalCost, totalcost_n_blocks, totalcost_block_size); 
+   return SUCCESS;
+}
+
+int LeastSquaresCost::calcGradient(){
+   float* truth = col->getGroundTruthLayer()->getDeviceA();
+   leastSqCalcGrad(d_AData, truth, bSize * fSize * xSize * ySize, d_GData, calcgrad_n_blocks, calcgrad_block_size);
+   return SUCCESS;
+}
+

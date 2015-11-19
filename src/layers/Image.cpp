@@ -83,6 +83,11 @@ int Image::loadImage(std::string filename, int batchIdx){
    return SUCCESS;
 }
 
+int Image::applyActivation(){
+   //Do nothing, as forwardUpdate takes care of everything
+   return SUCCESS;
+}
+
 int Image::forwardUpdate(int timestep){
    std::string filename;
 

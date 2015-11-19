@@ -31,14 +31,16 @@ public:
    BaseConnection* getPrev(){return prevConn;};
    BaseConnection* getNext(){return nextConn;};
 
-   //TODO make virtual, but need to change test
+   virtual int applyActivation();
    virtual int forwardUpdate(int timestep);
    virtual int backwardsUpdate(int timestep);
 
    //Note: this function is inefficient, only use for debugging
    //Caller's responsible for freeing memory
+   float * getHostU();
    float * getHostA();
 
+   float * getDeviceU(){return d_UData;}
    float * getDeviceA(){return d_AData;}
    float * getDeviceG(){return d_GData;}
 
@@ -51,6 +53,7 @@ public:
    //cudnnTensorDescriptor_t getGradientDescriptor(){return cudnnGDescriptor;}
 
 protected:
+   float * d_UData; //Feedforward preactivation function buffer
    float * d_AData; //Feedforward activity buffer
    float * d_GData; //Backpass gradient buffer
    //float * h_AData; //Host memory
@@ -58,8 +61,6 @@ protected:
    cudnnTensorDescriptor_t layerDescriptor;
    //cudnnTensorDescriptor_t cudnnGDescriptor;
    virtual int setSize();
-
-private:
    BaseConnection* prevConn;
    BaseConnection* nextConn;
 

@@ -33,7 +33,7 @@ Convolution::~Convolution(){
    }
 }
 
-int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename){
+int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_decay){
    weightInitType = in_weightInitType;
    assert(weightInitType == 0 || weightInitType == 1);
    weightInitVal = in_weightInitVal;
@@ -42,6 +42,13 @@ int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_n
    assert(biasInitType == 0 || biasInitType == 1);
    biasInitVal = in_biasInitVal;
    biasLoadFilename = in_biasLoadFilename;
+
+   plasticity = in_plasticity;
+   needGrad = plasticity;
+   dwRate = in_dwRate;
+   dbRate = in_dbRate;
+   decay = in_decay;
+
    return BaseConnection::setParams(c, connName, in_nyp, in_nxp, in_nfp, in_ystride, in_xstride);
 }
 
@@ -194,6 +201,21 @@ int Convolution::allocate(){
    return SUCCESS;
 }
 
+int Convolution::setWeight(int idx, float val){
+   int inNf = prevLayer->getFSize();
+   assert(idx >= 0 && idx < nfp * inNf * nyp * nxp); 
+   float* d_offsetWData = &(d_WData[idx]);
+   CudaError(cudaMemcpy(d_offsetWData, &val, sizeof(float), cudaMemcpyHostToDevice));
+   return SUCCESS;
+}
+
+int Convolution::setBias(int idx, float val){
+   int inNf = prevLayer->getFSize();
+   assert(idx >= 0 && idx < nfp); 
+   float* d_offsetBias = &(d_Bias[idx]);
+   CudaError(cudaMemcpy(d_offsetBias, &val, sizeof(float), cudaMemcpyHostToDevice));
+   return SUCCESS;
+}
 
 float* Convolution::getHostW(){
    int inNf = prevLayer->getFSize();
@@ -206,12 +228,34 @@ float* Convolution::getHostW(){
    return h_outMem;
 }
 
-float* Convolution::getHostBias(){
+float* Convolution::getHostB(){
    size_t memSize = nfp * sizeof(float);
    assert(memSize == biasDataSize);
    CudaError(cudaDeviceSynchronize());
    float * h_outMem = (float*) malloc(biasDataSize);
    CudaError(cudaMemcpy(h_outMem, d_Bias, biasDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
+}
+
+float* Convolution::getHostWGradient(){
+   assert(d_GWData);
+   int inNf = prevLayer->getFSize();
+   size_t memSize = nyp * inNf * nxp * nfp * sizeof(float);
+   assert(memSize == gpuDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(gpuDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_GWData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
+}
+
+float* Convolution::getHostBGradient(){
+   size_t memSize = nfp * sizeof(float);
+   assert(memSize == biasDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(biasDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_GBias, biasDataSize, cudaMemcpyDeviceToHost));
    CudaError(cudaDeviceSynchronize());
    return h_outMem;
 }
@@ -294,7 +338,7 @@ int Convolution::forwardDeliver(){
    cudnnTensorDescriptor_t inputDesc = prevLayer->getLayerDescriptor();
    float* inputPtr = prevLayer->getDeviceA();
    cudnnTensorDescriptor_t outputDesc = nextLayer->getLayerDescriptor();
-   float* outputPtr = nextLayer->getDeviceA();
+   float* outputPtr = nextLayer->getDeviceU();
 
    float alpha = 1; //input scaling
    float beta = 0; //output scaling, 0 means do not scale
@@ -332,6 +376,8 @@ int Convolution::forwardDeliver(){
 }
 
 int Convolution::backwardDeliver(){
+   if(!needGrad) return SUCCESS;
+   
    //if(DEBUG) std::cout << "Convolution gradient called\n";
    std::cout << "Convolution gradient called\n";
 
@@ -352,8 +398,8 @@ int Convolution::backwardDeliver(){
    CudnnError(cudnnConvolutionBackwardBias(
       handle,
       &alpha,
-      srcDesc, //Prev layer's activations
-      srcPtr,
+      diffDesc, //Prev layer's activations
+      diffPtr,
       &beta,
       biasDescriptor, //Bias gradient descriptor
       d_GBias //Bias gradient pointer

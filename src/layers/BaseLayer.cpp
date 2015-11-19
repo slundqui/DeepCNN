@@ -11,6 +11,7 @@
 
 BaseLayer::BaseLayer()
 {
+   d_UData = NULL;
    d_AData = NULL;
    d_GData = NULL;
    //h_AData = NULL;
@@ -23,6 +24,7 @@ BaseLayer::BaseLayer()
 }
 
 BaseLayer::~BaseLayer(){
+   CudaError( cudaFree(d_UData));
    CudaError( cudaFree(d_AData));
    CudaError( cudaFree(d_GData));
    
@@ -39,6 +41,16 @@ int BaseLayer::setParams(Column* c, std::string layerName){
 
    paramsSet = true;
    return SUCCESS;
+}
+
+float* BaseLayer::getHostU(){
+   size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
+   assert(memSize == gpuDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(gpuDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_UData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
 }
 
 float* BaseLayer::getHostA(){
@@ -88,19 +100,28 @@ int BaseLayer::initialize(){
 }
 
 int BaseLayer::allocate(){
+   CudaError( cudaMalloc(&d_UData, gpuDataSize));
    CudaError( cudaMalloc(&d_AData, gpuDataSize));
    CudaError( cudaMalloc(&d_GData, gpuDataSize));
 
    //Initialize all layer data to 0
    int count = bSize * ySize * xSize * fSize;
+   setArray(d_UData, count, 0);
    setArray(d_AData, count, 0);
    setArray(d_GData, count, 0);
 
    return SUCCESS;
 }
 
+int BaseLayer::applyActivation(){
+   CudaError(cudaMemcpy(d_AData, d_UData, gpuDataSize, cudaMemcpyDeviceToDevice));
+   CudaError(cudaDeviceSynchronize());
+   return SUCCESS;
+}
+
 int BaseLayer::forwardUpdate(int timestep){
    prevConn->forwardDeliver();
+   applyActivation();
    return SUCCESS;
 }
 

@@ -100,6 +100,10 @@ int MatInput::loadMatInput(){
    return SUCCESS;
 }
 
+int MatInput::applyActivation(){
+   //Does nothing, forward update takes care of things
+   return SUCCESS;
+}
 
 int MatInput::forwardUpdate(int timestep){
    std::string filename;

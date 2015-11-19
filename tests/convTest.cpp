@@ -115,7 +115,7 @@ TEST_F(convTests, initWeightsTest){
 
 TEST_F(convTests, initBiasTest){
    myColBias->initialize();
-   float* h_Bias = convBias->getHostBias();
+   float* h_Bias = convBias->getHostB();
    for(int i = 0; i < 5; i++){
       //std::cout << "idx " << i << " val " << h_WData[i] << "\n";
       ASSERT_EQ(h_Bias[i], 5);
