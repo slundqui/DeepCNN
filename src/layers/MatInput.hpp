@@ -27,6 +27,7 @@ public:
    virtual int applyActivation();
    virtual int forwardUpdate(int timestep);
    virtual int backwardsUpdate(int timestep);
+   int rewind(){exampleIdx = 0; return SUCCESS;}
 protected:
    virtual int setSize();
    int loadMatInput();

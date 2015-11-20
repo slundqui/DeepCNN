@@ -377,15 +377,22 @@ int Convolution::forwardDeliver(){
 
 int Convolution::backwardDeliver(){
    if(!needGrad) return SUCCESS;
+   //std::cout << "Layer " << name << " gradient called\n";
    
-   //if(DEBUG) std::cout << "Convolution gradient called\n";
-   std::cout << "Convolution gradient called\n";
+   //Clear all gradient buffers
+   CudaError(cudaMemset(d_GWData, 0, gpuDataSize));
+   CudaError(cudaMemset(d_GBias, 0, biasDataSize));
+
+   if(DEBUG) std::cout << "Convolution gradient called\n";
+   //std::cout << "Convolution gradient called\n";
 
    cudnnHandle_t handle = col->getCudnnHandle();
    cudnnTensorDescriptor_t srcDesc = prevLayer->getLayerDescriptor();
    float* srcPtr = prevLayer->getDeviceA();
+
    cudnnTensorDescriptor_t diffDesc = nextLayer->getLayerDescriptor();
    float* diffPtr = nextLayer->getDeviceG();
+   //float* nextAPtr = nextLayer->getDeviceA();
 
    cudnnTensorDescriptor_t outputDesc = prevLayer->getLayerDescriptor();
    float* outputPtr = prevLayer->getDeviceG();
@@ -424,6 +431,7 @@ int Convolution::backwardDeliver(){
       filterDescriptor, //Weight gradient descriptor
       d_GWData //Weight gradient pointer
    ));
+
    CudaError(cudaDeviceSynchronize());
 
    //Data gradient calculation (backpass to previous layer)
@@ -445,5 +453,10 @@ int Convolution::backwardDeliver(){
 
    return SUCCESS;
 }
+
+int Convolution::getNumWeights(){
+   return prevLayer->getFSize() * nyp * nxp * nfp;
+}
+
 
 

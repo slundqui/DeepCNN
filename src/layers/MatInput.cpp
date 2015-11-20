@@ -121,6 +121,7 @@ int MatInput::forwardUpdate(int timestep){
 
 //Backwards update does nothing, as image does not have a gradient
 int MatInput::backwardsUpdate(int timestep){
+   BaseLayer::backwardsUpdate(timestep);
    return SUCCESS;
 };
 

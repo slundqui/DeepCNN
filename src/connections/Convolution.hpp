@@ -48,6 +48,8 @@ public:
    //Sets a weight of a specific index to a specific value
    int setWeight(int idx, float val);
    int setBias(int idx, float val);
+   int getNumWeights();
+   int getNumBiases(){return nfp;}
 
 protected:
    cudnnFilterDescriptor_t filterDescriptor;

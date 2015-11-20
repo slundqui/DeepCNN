@@ -20,7 +20,7 @@ __global__ void k_leastSqTotalCost(float* estimate, float* truth, int count, int
       //Grab batch index
       int batchIdx = idx/count;
       //Calculate sum of position
-      float sumMe = .5 * pow(truth[idx] - estimate[idx], 2);
+      float sumMe = .5 * pow(estimate[idx] - truth[idx], 2);
       //Atomic add into output
       atomicAdd(&(out[batchIdx]), sumMe);
    }
@@ -32,8 +32,8 @@ __global__ void k_leastSqCalcGrad(float* estimate, float* truth, int batchcount,
    //If within range
    if(idx < batchcount){
       //Is this supposed to be estimate - truth?
-      //out[idx] = estimate[idx] - truth[idx];
-      out[idx] = truth[idx] - estimate[idx];
+      out[idx] = estimate[idx] - truth[idx];
+      //out[idx] = (truth[idx] - estimate[idx]);
    }
 }
 

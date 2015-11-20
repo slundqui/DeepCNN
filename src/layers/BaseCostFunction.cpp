@@ -63,7 +63,6 @@ int BaseCostFunction::forwardUpdate(int timestep){
 }
 
 int BaseCostFunction::backwardsUpdate(int timestep){
-   BaseLayer::backwardsUpdate(timestep);
    //Sets gradient based on cost function subclass
    calcGradient();
    return SUCCESS;

@@ -22,7 +22,7 @@ int Activation::setParams(Column* c, std::string layerName, std::string inMode){
    if(inMode == "sigmoid"){
       activationMode = CUDNN_ACTIVATION_SIGMOID;
    }
-   else if(inMode == "reul"){
+   else if(inMode == "relu"){
       activationMode = CUDNN_ACTIVATION_RELU;
    }
    else if(inMode == "tanh"){
@@ -66,20 +66,22 @@ int Activation::applyActivation(){
 
 int Activation::backwardsUpdate(int timestep){
    BaseLayer::backwardsUpdate(timestep);
+   //std::cout << "Layer " << name << " calc gradient\n";
    float alpha = 1;
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
    CudaError(cudaDeviceSynchronize());
+
    CudnnError(cudnnActivationBackward(
       handle,
       activationMode,
       &alpha,
-      layerDescriptor, //Layer src data, preactivation buffer
-      d_UData,
+      layerDescriptor, //Layer src data, postactivation buffer
+      d_AData,
       layerDescriptor, //Layer srcDiffData, gradients
       d_GData,
-      layerDescriptor, //destData, postactivation buffer
-      d_AData,
+      layerDescriptor, //destData, preactivation buffer
+      d_UData,
       &beta,
       layerDescriptor, //Layer destDiffData, gradients
       d_GData));

@@ -114,8 +114,9 @@ int Image::forwardUpdate(int timestep){
    return SUCCESS;
 }
 
-//Backwards update does nothing, as image does not have a gradient
 int Image::backwardsUpdate(int timestep){
+   BaseLayer::backwardsUpdate(timestep);
+   
    return SUCCESS;
 };
 
