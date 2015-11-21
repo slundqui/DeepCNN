@@ -15,7 +15,7 @@ FullyConnected::FullyConnected(){
 FullyConnected::~FullyConnected(){
 }
 
-int FullyConnected::setParams(Column* c, std::string connName, int in_nfp, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_decay){
+int FullyConnected::setParams(Column* c, std::string connName, int in_nfp, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_dwMom, float in_dbMom, float in_decay){
 
    return Convolution::setParams(
          c,
@@ -34,6 +34,8 @@ int FullyConnected::setParams(Column* c, std::string connName, int in_nfp, int i
          in_plasticity,
          in_dwRate,
          in_dbRate,
+         in_dwMom,
+         in_dbMom,
          in_decay
    );
 }
@@ -63,16 +65,7 @@ int FullyConnected::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    return SUCCESS;
 }
 
-int FullyConnected::initialize(){
-   //Set nxp and nyp based on previous layer
-   nxp = prevLayer->getXSize();
-   nyp = prevLayer->getYSize();
-
-   BaseConnection::initialize();
-   if(!paramsSet){
-      std::cerr << "Error! Connection did not set parameters before trying to initialize\n";
-      exit(UNDEFINED_PARAMS);
-   }
+int FullyConnected::setCudnnDescriptors(){
    int inNf = prevLayer->getFSize();
 
    //Set up filter descriptor
@@ -108,11 +101,14 @@ int FullyConnected::initialize(){
       1, 1, //upscale the input in x/y direction
       CUDNN_CONVOLUTION) //Convolution as opposed to cross correlation
    );
-
-   //Set size for this layer
-   gpuDataSize = prevLayer->getFSize() * nyp * nxp * nfp * sizeof(float);
-   biasDataSize = nfp * sizeof(float);
-
    return SUCCESS;
+}
+
+
+int FullyConnected::initialize(){
+   //Set nxp and nyp based on previous layer
+   nxp = prevLayer->getXSize();
+   nyp = prevLayer->getYSize();
+   return Convolution::initialize();
 }
 

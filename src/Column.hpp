@@ -12,7 +12,7 @@
 
 class Column{
 public:
-   Column(int in_bSize);
+   Column(int in_bSize, unsigned int in_seed = 1234567890);
    virtual ~Column();
    int addLayer(BaseLayer* inLayer);
    int addConn(BaseConnection* inConn);
@@ -27,6 +27,7 @@ public:
    virtual int initAndRun(int numTimesteps);
    cudnnHandle_t getCudnnHandle(){return cudnn_handle;}
    void query_device(int id);
+   unsigned int getSeed(){return seed;}
    //virtual int updateState(double timef, double dt);
 private:
    std::vector<BaseLayer*> layerList;
@@ -47,6 +48,7 @@ private:
    //Device properties
    cudnnHandle_t cudnn_handle;
    cudaDeviceProp devProp;
+   unsigned int seed;
 
    
 

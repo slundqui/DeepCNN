@@ -30,10 +30,13 @@ public:
          int in_plasticity = 0, //learning or not
          float in_dwRate = .001, //weight learning rate
          float in_dbRate = .001, //bias learning rate
+         float in_dwMom = 0,
+         float in_dbMom = 0,
          float in_decay = 0 //Decay applied to the weight
          );
 
    virtual int initialize();
+   virtual int setCudnnDescriptors();
    virtual int allocate();
    virtual int updateWeights(int timestep);
    virtual int forwardDeliver();
@@ -49,7 +52,7 @@ public:
    int setWeight(int idx, float val);
    int setBias(int idx, float val);
    int getNumWeights();
-   int getNumBiases(){return nfp;}
+   int getNumBias(){return nfp;}
 
 protected:
    cudnnFilterDescriptor_t filterDescriptor;
@@ -76,6 +79,8 @@ protected:
 
    float* d_WData;
    float* d_Bias;
+   float* d_dWData;
+   float* d_dBias;
 
    //Gradients of weights and biases
    float* d_GWData;
@@ -86,7 +91,16 @@ protected:
    int needGrad;
    float dwRate;
    float dbRate;
+   float dwMom;
+   float dbMom;
    float decay;
+
+   int weight_block_size;
+   int weight_n_blocks;
+   int bias_block_size;
+   int bias_n_blocks;
+
+
 
 };
 #endif 

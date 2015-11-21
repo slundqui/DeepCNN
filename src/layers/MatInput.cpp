@@ -80,7 +80,8 @@ int MatInput::allocate(){
    BaseLayer::allocate();
 
    //Start off with a forward pass to load 1st image (with -1 timestep)
-   forwardUpdate(-1);
+   //forwardUpdate(-1);
+
    return SUCCESS;
 }
 
@@ -109,9 +110,9 @@ int MatInput::forwardUpdate(int timestep){
    std::string filename;
 
    //First image was already loaded on first timestep
-   if(timestep == 0){
-      return SUCCESS;
-   }
+   //if(timestep == 0){
+   //   return SUCCESS;
+   //}
 
    //Read image per batch
    loadMatInput();

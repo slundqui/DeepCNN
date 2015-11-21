@@ -1,5 +1,6 @@
 #include "cuda_utils.hpp"
 #include "utils.hpp"
+#include <curand.h>
 //CUDA kernel
 __global__ void k_setArray(float* array, int count, float initVal){
    int idx = blockIdx.x * blockDim.x + threadIdx.x;

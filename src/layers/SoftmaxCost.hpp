@@ -1,20 +1,20 @@
 /**
- * LeastSquaresCost.hpp
+ * SoftmaxCost.hpp
  *
  * Author: Sheng Lundquist
  **/
-#ifndef LEASTSQAURESCOST_HPP_ 
-#define LEASTSQAURESCOST_HPP_ 
+#ifndef SOFTMAXCOST_HPP_ 
+#define SOFTMAXCOST_HPP_ 
 
 #include "includes.hpp"
 #include "BaseCostFunction.hpp"
 #include "../Column.hpp"
 #include <fstream>
 
-class LeastSquaresCost: public BaseCostFunction{
+class SoftmaxCost: public BaseCostFunction{
 public:
-   LeastSquaresCost();
-   virtual ~LeastSquaresCost();
+   SoftmaxCost();
+   virtual ~SoftmaxCost();
    virtual int initialize();
    virtual int allocate();
 //   virtual int setParams(Column* c, std::string layerName, std::string outCostFile);

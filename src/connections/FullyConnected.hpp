@@ -26,9 +26,12 @@ public:
          int in_plasticity = 0, //learning or not
          float in_dwRate = .001, //weight learning rate
          float in_dbRate = .001, //bias learning rate
+         float in_dwMom = 0,
+         float in_dbMom = 0,
          float in_decay = 0 //Decay applied to the weight
          );
    virtual int initialize();
+   virtual int setCudnnDescriptors();
    virtual int setNextLayerSize(int* ySize, int* xSize, int* fSize);
 };
 #endif 

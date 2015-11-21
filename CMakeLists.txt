@@ -51,6 +51,8 @@ file(GLOB tmp src/layers/*.cu)
 set(LibSrc ${LibSrc} ${tmp})
 file(GLOB tmp src/connections/*.[ch]pp)
 set(LibSrc ${LibSrc} ${tmp})
+file(GLOB tmp src/connections/*.cu)
+set(LibSrc ${LibSrc} ${tmp})
 
 file(GLOB testLibSrc tests/*.[ch]pp)
 

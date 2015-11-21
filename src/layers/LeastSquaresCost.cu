@@ -32,8 +32,8 @@ __global__ void k_leastSqCalcGrad(float* estimate, float* truth, int batchcount,
    //If within range
    if(idx < batchcount){
       //Is this supposed to be estimate - truth?
-      out[idx] = estimate[idx] - truth[idx];
-      //out[idx] = (truth[idx] - estimate[idx]);
+      //out[idx] = estimate[idx] - truth[idx];
+      out[idx] = (truth[idx] - estimate[idx]);
    }
 }
 

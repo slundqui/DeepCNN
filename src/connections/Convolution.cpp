@@ -3,6 +3,9 @@
  * Author: Sheng Lundquist
  **/
 
+extern "C" void convLearningRule(float* d_Weight, float* d_dWeight, float* d_GWeight, int count, float eps, float mom, float decay, int n_blocks, int block_size); 
+extern "C" void calcSizeLearn(int* h_block_size, int* h_n_blocks, int count);
+
 #include "Convolution.hpp"
 #include "../layers/BaseLayer.hpp"
 #include "../utils.hpp"
@@ -11,7 +14,9 @@
 
 Convolution::Convolution(){
    d_WData = NULL;
+   d_dWData = NULL;
    d_Bias = NULL;
+   d_dBias = NULL;
    d_GWData = NULL;
    d_GBias = NULL;
    weightLoadFilename = "";
@@ -21,11 +26,17 @@ Convolution::Convolution(){
    workspaceSize = 0;
    d_workspaceMem = NULL;
    biasDataSize = 0;
+   weight_block_size = 0;
+   weight_n_blocks = 0;
+   bias_block_size = 0;
+   bias_n_blocks = 0;
 }
 
 Convolution::~Convolution(){
    CudaError(cudaFree(d_WData));
+   CudaError(cudaFree(d_dWData));
    CudaError(cudaFree(d_Bias));
+   CudaError(cudaFree(d_dBias));
    CudaError(cudaFree(d_GWData));
    CudaError(cudaFree(d_GBias));
    if(d_workspaceMem){
@@ -33,13 +44,13 @@ Convolution::~Convolution(){
    }
 }
 
-int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_decay){
+int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_dwMom, float in_dbMom, float in_decay){
    weightInitType = in_weightInitType;
-   assert(weightInitType == 0 || weightInitType == 1);
+   assert(weightInitType == 0 || weightInitType == 1 || weightInitType == 2);
    weightInitVal = in_weightInitVal;
    weightLoadFilename = in_weightLoadFilename;
    biasInitType = in_biasInitType;
-   assert(biasInitType == 0 || biasInitType == 1);
+   assert(biasInitType == 0 || biasInitType == 1 || biasInitType == 2);
    biasInitVal = in_biasInitVal;
    biasLoadFilename = in_biasLoadFilename;
 
@@ -47,19 +58,15 @@ int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_n
    needGrad = plasticity;
    dwRate = in_dwRate;
    dbRate = in_dbRate;
+   dwMom = in_dwMom;
+   dbMom = in_dbMom;
    decay = in_decay;
 
    return BaseConnection::setParams(c, connName, in_nyp, in_nxp, in_nfp, in_ystride, in_xstride);
 }
 
-int Convolution::initialize(){
-   BaseConnection::initialize();
-   if(!paramsSet){
-      std::cerr << "Error! Connection did not set parameters before trying to initialize\n";
-      exit(UNDEFINED_PARAMS);
-   }
+int Convolution::setCudnnDescriptors(){
    int inNf = prevLayer->getFSize();
-
    //Set up filter descriptor
    CudnnError(cudnnCreateFilterDescriptor(&filterDescriptor));
    if(DEBUG) std::cout << "Connection " << name << " setting cudnn filter descrptor with " << nfp << ", " << inNf << ", " << nyp << ", " << nxp << "\n";
@@ -98,9 +105,30 @@ int Convolution::initialize(){
       CUDNN_CONVOLUTION) //Convolution as opposed to cross correlation
    );
 
+   return SUCCESS;
+}
+
+
+int Convolution::initialize(){
+   BaseConnection::initialize();
+   if(!paramsSet){
+      std::cerr << "Error! Connection did not set parameters before trying to initialize\n";
+      exit(UNDEFINED_PARAMS);
+   }
+
+   setCudnnDescriptors();
+
+   int weightCount = prevLayer->getFSize() * nyp * nxp * nfp;
+   int biasCount = nfp;
    //Set size for this layer
-   gpuDataSize = prevLayer->getFSize() * nyp * nxp * nfp * sizeof(float);
-   biasDataSize = nfp * sizeof(float);
+   gpuDataSize = weightCount * sizeof(float);
+   biasDataSize = biasCount * sizeof(float);
+
+   //Set kernel calling size
+   calcSizeLearn(&weight_block_size, &weight_n_blocks, weightCount);
+   calcSizeLearn(&bias_block_size, &bias_n_blocks, biasCount);
+
+   std::cout << "Weight_block_size " << weight_block_size << " weight_n_blocks " << weight_n_blocks << " weightCount " << weightCount << "\n";
 
    return SUCCESS;
 }
@@ -188,8 +216,10 @@ int Convolution::allocate(){
 
    //Allocate weights and bias
    CudaError(cudaMalloc(&d_WData, gpuDataSize));
+   CudaError(cudaMalloc(&d_dWData, gpuDataSize));
    CudaError(cudaMalloc(&d_GWData, gpuDataSize));
    CudaError(cudaMalloc(&d_Bias, biasDataSize));
+   CudaError(cudaMalloc(&d_dBias, biasDataSize));
    CudaError(cudaMalloc(&d_GBias, biasDataSize));
 
    CudaError(cudaMalloc(&d_workspaceMem, workspaceSize));
@@ -262,21 +292,62 @@ float* Convolution::getHostBGradient(){
 
 int Convolution::initializeWeights(){
    int inNf = prevLayer->getFSize();
+   //Set d buffers
+   CudaError(cudaMemset(d_dWData, 0, gpuDataSize));
+   //Set gradient buffers
+   CudaError(cudaMemset(d_GWData, 0, gpuDataSize));
 
    if(weightInitType == 0){ //uniform weights
       int count = nfp * inNf * nyp * nxp;
       setArray(d_WData, count, weightInitVal);
    }
-   else if(weightInitType == 1){
+   else if(weightInitType == 1){//uniform random
+      int count = nfp * inNf * nyp * nxp;
+      float* h_randArray = (float*) malloc(count * sizeof(float));
+      assert(weightInitVal != 0);
+      for(int i = 0; i < count; i++){
+         //Random float between 0 and 1
+         float randVal = ((float)rand())/RAND_MAX;
+         //Random float between -1 and 1 
+         randVal = randVal*2 - 1;
+         //Random float between -weightInitVal and +weightInitVal
+         randVal = randVal / weightInitVal;
+         h_randArray[i] = randVal;
+      }
+      //Copy to weights
+      CudaError(cudaMemcpy(d_WData, h_randArray, count*sizeof(float), cudaMemcpyHostToDevice));
+      CudaError(cudaDeviceSynchronize());
+      free(h_randArray);
+   }
+   else if(weightInitType == 2){ //Load weights
       int nDims;
       size_t * dims;
       readDataToDevice(weightLoadFilename, d_WData, &nDims, &dims);
-      assert(nDims == 4);
-
-      assert(dims[0] == (size_t)nxp); //Fastest
-      assert(dims[1] == (size_t)nyp);
-      assert(dims[2] == (size_t)inNf);
-      assert(dims[3] == (size_t)nfp); //Slowest
+      assert(nDims <= 4);
+      if(nDims >= 1){
+         assert(dims[0] == (size_t)nxp); //Fastest
+      }
+      else{
+         assert(nxp == 1);
+      }
+      if(nDims >= 2){
+         assert(dims[1] == (size_t)nyp);
+      }
+      else{
+         assert(nyp == 1);
+      }
+      if(nDims >=3){
+         assert(dims[2] == (size_t)inNf);
+      }
+      else{
+         assert(inNf == 1);
+      }
+      if(nDims >= 4){
+         assert(dims[3] == (size_t)nfp); //Slowest
+      }
+      else{
+         assert(nfp == 1);
+      }
    }
    else{
       std::cerr << "Weight init type of " << weightInitType << " not recognized\n";
@@ -286,11 +357,31 @@ int Convolution::initializeWeights(){
 }
 
 int Convolution::initializeBias(){
+   CudaError(cudaMemset(d_dBias, 0, biasDataSize));
+   CudaError(cudaMemset(d_GBias, 0, biasDataSize));
    if(biasInitType == 0){ //uniform weights
       int count = nfp;
       setArray(d_Bias, count, biasInitVal);
    }
-   else if(biasInitType == 1){
+   else if(biasInitType == 1){ //uniform random
+      int count = nfp;
+      float* h_randArray = (float*) malloc(count * sizeof(float));
+      assert(biasInitVal != 0);
+      for(int i = 0; i < count; i++){
+         //Random float between 0 and 1
+         float randVal = ((float)rand())/RAND_MAX;
+         //Random float between -1 and 1 
+         randVal = randVal*2 - 1;
+         //Random float between -biasInitVal and +biasInitVal
+         randVal = randVal / biasInitVal;
+         h_randArray[i] = randVal;
+      }
+      //Copy to weights
+      CudaError(cudaMemcpy(d_Bias, h_randArray, count*sizeof(float), cudaMemcpyHostToDevice));
+      CudaError(cudaDeviceSynchronize());
+      free(h_randArray);
+   }
+   else if(biasInitType == 2){ //load
       int nDims;
       size_t * dims;
       readDataToDevice(biasLoadFilename, d_Bias, &nDims, &dims);
@@ -326,8 +417,18 @@ int Convolution::setNextLayerSize(int* ySize, int* xSize, int* fSize){
    return SUCCESS;
 }
 
-//TODO
 int Convolution::updateWeights(int timestep){
+   if(!plasticity){
+      return SUCCESS;
+   }
+
+   //std::cout << "Connection " << name << " updating weights\n";
+   CudaError(cudaDeviceSynchronize());
+   //Update weights and bias
+   convLearningRule(d_WData, d_dWData, d_GWData, getNumWeights(), dwRate, dwMom, decay, weight_n_blocks, weight_block_size); 
+
+   convLearningRule(d_Bias, d_dBias, d_GBias, getNumBias(), dbRate, dbMom, 0, bias_n_blocks, bias_block_size); 
+
    return SUCCESS;
 }
 

@@ -6,7 +6,7 @@
 #include "Column.hpp"
 #include "utils.hpp"
 
-Column::Column(int in_bSize)
+Column::Column(int in_bSize, unsigned int in_seed)
 {
    //initialize();
    bSize = in_bSize;
@@ -15,6 +15,9 @@ Column::Column(int in_bSize)
    timestep = 0;
    totalGpuSize = 0;
    groundTruthLayer = NULL;
+   seed = in_seed;
+   //Initialize random number generator
+   srand(seed);
 
    query_device(0);
    CudnnError(cudnnCreate(&cudnn_handle));
@@ -137,11 +140,8 @@ int Column::initialize(){
 //TODO
 int Column::run(int numTimesteps){
    for(int t = 0; t < numTimesteps; t++){
-      //Update all connections first (learning)
-      for(std::vector<BaseConnection*>::iterator connIt = connList.begin();
-            connIt != connList.end(); ++connIt){
-         (*connIt)->updateWeights(timestep);
-      }
+      std::cout << "Timestep " << timestep << "\n";
+
       //Update ground truth layer first
       if(groundTruthLayer){
          groundTruthLayer->forwardUpdate(timestep);
@@ -158,6 +158,15 @@ int Column::run(int numTimesteps){
             rLayerIt != layerList.rend(); ++rLayerIt){
          (*rLayerIt)->backwardsUpdate(timestep);
       }
+      CudaError(cudaDeviceSynchronize());
+
+      //Update all connections
+      for(std::vector<BaseConnection*>::iterator connIt = connList.begin();
+            connIt != connList.end(); ++connIt){
+         (*connIt)->updateWeights(timestep);
+      }
+
+
       timestep++;
    }
    return SUCCESS;

@@ -63,6 +63,16 @@ float* BaseLayer::getHostA(){
    return h_outMem;
 }
 
+float* BaseLayer::getHostG(){
+   size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
+   assert(memSize == gpuDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(gpuDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_GData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
+}
+
 //Sets the layer's size accordingly
 int BaseLayer::setSize(){
    //Call previous connection to set sizes
@@ -105,10 +115,15 @@ int BaseLayer::allocate(){
    CudaError( cudaMalloc(&d_GData, gpuDataSize));
 
    //Initialize all layer data to 0
-   int count = bSize * ySize * xSize * fSize;
-   setArray(d_UData, count, 0);
-   setArray(d_AData, count, 0);
-   setArray(d_GData, count, 0);
+   //int count = bSize * ySize * xSize * fSize;
+
+   CudaError(cudaMemset(d_UData, 0, gpuDataSize));
+   CudaError(cudaMemset(d_AData, 0, gpuDataSize));
+   CudaError(cudaMemset(d_GData, 0, gpuDataSize));
+   
+   //setArray(d_UData, count, 0);
+   //setArray(d_AData, count, 0);
+   //setArray(d_GData, count, 0);
 
    return SUCCESS;
 }

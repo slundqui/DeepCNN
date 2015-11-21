@@ -39,6 +39,7 @@ public:
    //Caller's responsible for freeing memory
    float * getHostU();
    float * getHostA();
+   float * getHostG();
 
    float * getDeviceU(){return d_UData;}
    float * getDeviceA(){return d_AData;}

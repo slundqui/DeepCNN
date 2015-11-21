@@ -44,10 +44,13 @@ int BaseCostFunction::allocate(){
    BaseLayer::allocate();
    CudaError(cudaMalloc(&d_TotalCost, bSize * sizeof(float)));
    h_TotalCost = (float*)malloc(bSize * sizeof(float));
+   
    return SUCCESS;
 }
 
 const float* BaseCostFunction::getHostTotalCost(){
+   //calculate total cost
+   calcTotalCost();
    CudaError(cudaDeviceSynchronize());
    CudaError(cudaMemcpy(h_TotalCost, d_TotalCost, bSize*sizeof(float), cudaMemcpyDeviceToHost));
    CudaError(cudaDeviceSynchronize());
@@ -56,13 +59,13 @@ const float* BaseCostFunction::getHostTotalCost(){
 
 int BaseCostFunction::forwardUpdate(int timestep){
    BaseLayer::forwardUpdate(timestep);
-   //calculate total cost
-   calcTotalCost();
-   //TODO write total cost to file
+   //Calculate accuracy
+
    return SUCCESS;
 }
 
 int BaseCostFunction::backwardsUpdate(int timestep){
+   BaseLayer::backwardsUpdate(timestep);
    //Sets gradient based on cost function subclass
    calcGradient();
    return SUCCESS;

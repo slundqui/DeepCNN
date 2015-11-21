@@ -49,7 +49,7 @@ int Image::initialize(){
 int Image::allocate(){
    BaseLayer::allocate();
    //Start off with a forward pass to load 1st image (with -1 timestep)
-   forwardUpdate(-1);
+   //forwardUpdate(-1);
    return SUCCESS;
 }
 
@@ -92,23 +92,25 @@ int Image::forwardUpdate(int timestep){
    std::string filename;
 
    //First image was already loaded on first timestep
-   if(timestep == 0){
-      return SUCCESS;
-   }
+   //if(timestep == 0){
+   //   return SUCCESS;
+   //}
+
    //Read image per batch
    for(int b = 0; b < bSize; b++){
       getline(listFile, filename);
       if(listFile.eof()){
          listFile.clear();
          listFile.seekg(0);
-         if(DEBUG) std::cout << "Rewinding file " << filenameList << "\n";
+         std::cout << "Rewinding file " << filenameList << "\n";
          getline(listFile, filename);
          if(listFile.eof()){
             std::cerr << "Error, file " << filenameList << " empty\n";
             exit(FILEIO_ERROR);
          }
       }
-      if(DEBUG) std::cout << "Reading image " << filename << " into batch " << b << "\n";
+      //if(DEBUG) std::cout << "Reading image " << filename << " into batch " << b << "\n";
+      std::cout << "Reading image " << filename << " into batch " << b << "\n";
       loadImage(filename, b);
    }
    return SUCCESS;

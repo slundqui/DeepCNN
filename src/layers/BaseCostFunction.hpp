@@ -30,9 +30,5 @@ public:
 protected:
    float* d_TotalCost;
    float* h_TotalCost;
-   
-   
-
-
 };
 #endif 

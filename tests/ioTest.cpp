@@ -27,7 +27,7 @@ class mat_fileio: public ::testing::Test{
                          5, //nfp
                          2, //ystride
                          2, //xstride
-                         1, //from file init val
+                         2, //from file init val
                          0, //initVal, not used
                          "/home/sheng/workspace/DeepCNN/tests/testMats/idxcount_2x4x1x5.mat" //filename
                          );
@@ -55,6 +55,7 @@ class mat_fileio: public ::testing::Test{
 //For reading a mat 
 TEST_F(mat_fileio, loadMat){
    myCol->initialize();
+   myCol->run(1);
    float* h_AData = input->getHostA();
    for(int i = 0; i < 8*16*3; i++){
       ASSERT_EQ(h_AData[i], i+1);
@@ -62,7 +63,7 @@ TEST_F(mat_fileio, loadMat){
 
    //Run to update mats
    free(h_AData);
-   myCol->run(2);
+   myCol->run(1);
    h_AData = input->getHostA();
    int offset = 8*16*3;
    //First 2 batches should continue counting
@@ -79,6 +80,7 @@ TEST_F(mat_fileio, loadMat){
 
 TEST_F(mat_fileio, loadWeights){
    myCol->initialize();
+   myCol->run(1);
    float* h_WData = conv->getHostW();
    for(int i = 0; i < 4*2*5; i++){
       ASSERT_EQ(h_WData[i], i+1);

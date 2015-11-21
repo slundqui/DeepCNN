@@ -1,25 +1,26 @@
 /**
- * LeastSquaresCost.cpp
+ * SoftmaxCost.cpp
  * Author: Sheng Lundquist
  **/
 
-#include "LeastSquaresCost.hpp"
+#include "SoftmaxCost.hpp"
 #include "../utils.hpp"
 #include "../cuda_utils.hpp"
 #include <cuda_runtime.h>
 
-extern "C" void leastSqTotalCost(float* estimate, float* truth, int count, int nbatch, float* out, int n_blocks, int block_size);
-extern "C" void calcSizeTotalCost(int* h_block_size, int* h_n_blocks, int fSize);
+extern "C" void softmaxTotalCost(float* estimate, float* truth, int count, int nbatch, float* out, int n_blocks, int block_size);
+extern "C" void calcSizeSoftmaxCost(int* h_block_size, int* h_n_blocks, int fSize);
+
 extern "C" void leastSqCalcGrad(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
 extern "C" void calcSizeCalcGrad(int* h_block_size, int* h_n_blocks, int batchcount);
 
-LeastSquaresCost::LeastSquaresCost()
+SoftmaxCost::SoftmaxCost()
 {
    totalcost_block_size = 0;
    totalcost_n_blocks = 0;
 }
 
-LeastSquaresCost::~LeastSquaresCost(){
+SoftmaxCost::~SoftmaxCost(){
 }
 
 //int LeastCostFunction::setParams(Column* c, std::string layerName, std::string outCostFile, std::string outAccuracyFile){
@@ -29,30 +30,32 @@ LeastSquaresCost::~LeastSquaresCost(){
 //   return BaseLayer::setParams(c, layerName);
 //}
 
-int LeastSquaresCost::initialize(){
+int SoftmaxCost::initialize(){
    BaseCostFunction::initialize();
 
    //Currently only allowing 1x1xf connections
    assert(xSize == 1 && ySize == 1);
-   calcSizeTotalCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize);
+   calcSizeSoftmaxCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize);
    calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, bSize*fSize);
 
    return SUCCESS;
 }
 
-int LeastSquaresCost::allocate(){
+int SoftmaxCost::allocate(){
    BaseCostFunction::allocate();
    return SUCCESS;
 }
 
-int LeastSquaresCost::applyActivation(){
+//Softmax activation
+int SoftmaxCost::applyActivation(){
    float alpha = 1;
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
    CudaError(cudaDeviceSynchronize());
-   CudnnError(cudnnActivationForward(
+   CudnnError(cudnnSoftmaxForward(
       handle,
-      CUDNN_ACTIVATION_SIGMOID,
+      CUDNN_SOFTMAX_ACCURATE,
+      CUDNN_SOFTMAX_MODE_CHANNEL,
       &alpha,
       layerDescriptor,
       d_UData,
@@ -62,35 +65,22 @@ int LeastSquaresCost::applyActivation(){
    return SUCCESS;
 }
 
-int LeastSquaresCost::calcTotalCost(){
+int SoftmaxCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int count = fSize * xSize * ySize;
-   leastSqTotalCost(d_AData, truth, count, bSize, d_TotalCost, totalcost_n_blocks, totalcost_block_size); 
+   softmaxTotalCost(d_AData, truth, count, bSize, d_TotalCost, totalcost_n_blocks, totalcost_block_size); 
    return SUCCESS;
 }
 
-int LeastSquaresCost::calcGradient(){
+int SoftmaxCost::calcGradient(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
    float alpha = 1;
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
 
+   //Same gradient calculation as leastSq (est - truth)
    leastSqCalcGrad(d_AData, truth, batchcount, d_GData, calcgrad_n_blocks, calcgrad_block_size);
-   CudaError(cudaDeviceSynchronize());
-   CudnnError(cudnnActivationBackward(
-      handle,
-      CUDNN_ACTIVATION_SIGMOID,
-      &alpha,
-      layerDescriptor, //Layer src data, postactivation buffer
-      d_AData,
-      layerDescriptor, //Layer srcDiffData, gradients
-      d_GData,
-      layerDescriptor, //destData, preactivation buffer
-      d_UData,
-      &beta,
-      layerDescriptor, //Layer destDiffData, gradients
-      d_GData));
    return SUCCESS;
 }
 

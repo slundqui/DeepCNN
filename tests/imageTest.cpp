@@ -48,7 +48,7 @@ class ImageTests: public ::testing::Test {
 
 TEST_F(ImageTests, singleTest){
   singleCol->initialize();
-  singleCol->run(1); //image 1
+  singleCol->run(1); //image 0
   //Grab and copy device activity
   float * h_imgData = imageLayerSingle->getHostA();
   for(int i = 0; i < 5*4*3; i++){
@@ -74,8 +74,8 @@ TEST_F(ImageTests, singleTest){
 }
 
 TEST_F(ImageTests, batchTest){
-  batchCol->initialize(); //This should load the first image
-  singleCol->run(1); //image 2
+  batchCol->initialize(); 
+  batchCol->run(1); //image 0, 1, 2, 0
   //Grab and copy device activity
   float * h_imgData = imageLayerBatch->getHostA();
   for(int i = 0; i < 4*5*4*3; i++){
