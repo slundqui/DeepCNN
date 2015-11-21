@@ -54,6 +54,11 @@ public:
    int getNumWeights();
    int getNumBias(){return nfp;}
 
+   void printW();
+   void printB();
+   void printGW();
+   void printGB();
+
 protected:
    cudnnFilterDescriptor_t filterDescriptor;
    cudnnTensorDescriptor_t biasDescriptor;

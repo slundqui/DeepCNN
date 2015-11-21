@@ -307,11 +307,11 @@ int Convolution::initializeWeights(){
       assert(weightInitVal != 0);
       for(int i = 0; i < count; i++){
          //Random float between 0 and 1
-         float randVal = ((float)rand())/RAND_MAX;
+         float randVal = ((float)(rand()%1000))/999;
          //Random float between -1 and 1 
          randVal = randVal*2 - 1;
          //Random float between -weightInitVal and +weightInitVal
-         randVal = randVal / weightInitVal;
+         randVal = randVal * weightInitVal;
          h_randArray[i] = randVal;
       }
       //Copy to weights
@@ -373,7 +373,7 @@ int Convolution::initializeBias(){
          //Random float between -1 and 1 
          randVal = randVal*2 - 1;
          //Random float between -biasInitVal and +biasInitVal
-         randVal = randVal / biasInitVal;
+         randVal = randVal * biasInitVal;
          h_randArray[i] = randVal;
       }
       //Copy to weights
@@ -558,6 +558,33 @@ int Convolution::backwardDeliver(){
 int Convolution::getNumWeights(){
    return prevLayer->getFSize() * nyp * nxp * nfp;
 }
+
+void Convolution::printW(){
+   float* h_data = getHostW();
+   printMat(h_data, nfp, prevLayer->getFSize(), nyp, nxp);
+   free(h_data);
+}
+
+void Convolution::printB(){
+   float* h_data = getHostB();
+   printMat(h_data, 1, nfp, 1, 1);
+   free(h_data);
+}
+
+void Convolution::printGW(){
+   float* h_data = getHostWGradient();
+   printMat(h_data, nfp, prevLayer->getFSize(), nyp, nxp);
+   free(h_data);
+}
+
+void Convolution::printGB(){
+   float* h_data = getHostBGradient();
+   printMat(h_data, 1, nfp, 1, 1);
+   free(h_data);
+}
+
+
+
 
 
 

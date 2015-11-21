@@ -35,8 +35,9 @@ int SoftmaxCost::initialize(){
 
    //Currently only allowing 1x1xf connections
    assert(xSize == 1 && ySize == 1);
-   calcSizeSoftmaxCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize);
-   calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, bSize*fSize);
+   calcSizeSoftmaxCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize*xSize*ySize);
+
+   calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, bSize*fSize*xSize*ySize);
 
    return SUCCESS;
 }

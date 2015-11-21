@@ -50,6 +50,10 @@ public:
    int getXSize(){return xSize;}
    int getFSize(){return fSize;}
 
+   void printU();
+   void printA();
+   void printG();
+
    cudnnTensorDescriptor_t getLayerDescriptor(){return layerDescriptor;}
    //cudnnTensorDescriptor_t getGradientDescriptor(){return cudnnGDescriptor;}
 

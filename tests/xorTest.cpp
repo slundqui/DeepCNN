@@ -13,10 +13,9 @@ class xorTests: public ::testing::Test{
    protected:
       virtual void SetUp(){
          //Simple 2 layer network that has 2 inputs, 2 hidden units, and 1 output
-         batch = 4;
+         batch = 1;
          
-         myCol = new Column(batch, //batch
-                            1234567890//seed
+         myCol = new Column(batch //batch
                             );
 
          input= new MatInput();
@@ -40,14 +39,14 @@ class xorTests: public ::testing::Test{
                          "fc1", //name
                          2, //nfp
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
-                         1, //uniform init of bias
-                         .1, //initVal of bias
+                         0, //uniform init of bias
+                         0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .01, //dw rate
-                         .02, //db rate
+                         .1, //dw rate
+                         .2, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay
@@ -63,14 +62,14 @@ class xorTests: public ::testing::Test{
                          "fc2", //name
                          1, //nfp
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
-                         1, //uniform init of bias
-                         .1, //initVal of bias
+                         0, //uniform init of bias
+                         0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .01, //dw rate
-                         .02, //db rate
+                         .1, //dw rate
+                         .2, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay
@@ -319,91 +318,51 @@ TEST_F(xorTests, xorLearn){
    myCol->initialize();
 
 
-   myCol->run(5000);
-   float* h_est= cost->getHostA();
-   float* h_gt= gt->getHostA();
 
-   float tolerance = 1e-5;
-   for(int i = 0; i < batch; i++){
-      float h_thresh_est = h_est[i] < .5 ? 0 : 1;
-      ASSERT_TRUE(fabs(h_gt[i]-h_thresh_est) < tolerance);
+   //myCol->run(5000);
+   
+   for(int i = 0; i < 2; i++){
+      std::cout << "---------------\ninput\n";
+      input->printA();
+      std::cout << "---------------\nhidden U\n";
+      hidden->printU();
+      std::cout << "---------------\nhidden A\n";
+      hidden->printA();
+      std::cout << "---------------\nEST\n";
+      cost->printA();
+      std::cout << "---------------\nGT\n";
+      gt->printA();
+      std::cout << "---------------\nEST gradient\n";
+      cost->printG();
+      std::cout << "---------------\nfc2 w gradient\n";
+      fc2->printGW();
+      std::cout << "---------------\nfc2 b gradient\n";
+      fc2->printGB();
+      std::cout << "---------------\nfc2 weights\n";
+      fc2->printW();
+      std::cout << "---------------\nfc2 bias\n";
+      fc2->printB();
+      std::cout << "---------------\nhidden G\n";
+      hidden->printG();
+      std::cout << "---------------\nfc1 w gradient\n";
+      fc1->printGW();
+      std::cout << "---------------\nfc1 b gradient\n";
+      fc1->printGB();
+      std::cout << "---------------\nfc1 weights\n";
+      fc1->printW();
+      std::cout << "---------------\nfc1 bias\n";
+      fc1->printB();
+
+      myCol->run(1);
    }
 
-   //float* h_data;
-   //std::cout << "---------------\ninput\n";
-   //h_data= input->getHostA();
-   //printMat(h_data, batch, 2, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nhidden U\n";
-   //h_data= hidden->getHostU();
-   //printMat(h_data, batch, 2, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nhidden A\n";
-   //h_data= hidden->getHostA();
-   //printMat(h_data, batch, 2, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nEST\n";
-   //h_data= cost->getHostA();
-   //printMat(h_data, batch, 1, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nGT\n";
-   //h_data = gt->getHostA();
-   //printMat(h_data, batch, 1, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nEST gradient\n";
-   //h_data= cost->getHostG();
-   //printMat(h_data, batch, 1, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nfc2 w gradient\n";
-   //h_data= fc2->getHostWGradient();
-   //printMat(h_data, 1, 2, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nfc2 b gradient\n";
-   //h_data= fc2->getHostBGradient();
-   //printMat(h_data, 1, 1, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nfc2 weights\n";
-   //h_data= fc2->getHostW();
-   //printMat(h_data, 1, 2, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nfc2 bias\n";
-   //h_data= fc2->getHostB();
-   //printMat(h_data, 1, 1, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nhidden G\n";
-   //h_data= hidden->getHostG();
-   //printMat(h_data, batch, 2, 1, 1);
-   //free(h_data);
-
-   //std::cout << "---------------\nfc1 w gradient\n";
-   //h_data= fc1->getHostWGradient();
-   //printMat(h_data, 2, 2, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nfc1 b gradient\n";
-   //h_data= fc1->getHostBGradient();
-   //printMat(h_data, 1, 2, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nfc1 weights\n";
-   //h_data= fc1->getHostW();
-   //printMat(h_data, 2, 2, 1,1 );
-   //free(h_data);
-
-   //std::cout << "---------------\nfc1 bias\n";
-   //h_data= fc1->getHostB();
-   //printMat(h_data, 1, 2, 1,1 );
-   //free(h_data);
-
+   //float* h_est= cost->getHostA();
+   //float* h_gt= gt->getHostA();
+   //
+   //float tolerance = 1e-5;
+   //for(int i = 0; i < batch; i++){
+   //   float h_thresh_est = h_est[i] < .5 ? 0 : 1;
+   //   ASSERT_TRUE(fabs(h_gt[i]-h_thresh_est) < tolerance);
+   //}
 }
 

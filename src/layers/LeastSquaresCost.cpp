@@ -34,7 +34,7 @@ int LeastSquaresCost::initialize(){
 
    //Currently only allowing 1x1xf connections
    assert(xSize == 1 && ySize == 1);
-   calcSizeTotalCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize);
+   calcSizeTotalCost(&totalcost_block_size, &totalcost_n_blocks, bSize);
    calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, bSize*fSize);
 
    return SUCCESS;

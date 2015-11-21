@@ -35,7 +35,7 @@ inline void printMat(const float* array, int nb, int nf, int ny, int nx){
             printf("\t");
             for(int xi = 0; xi < nx; xi++){
                int idx = (bi*ny*nx*nf) + (fi*ny*nx) + (yi*nx) + xi;
-               printf("%f ", array[idx]);
+               printf("%3.5f ", array[idx]);
             }
             printf("\n");
          }

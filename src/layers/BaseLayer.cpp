@@ -149,3 +149,21 @@ int BaseLayer::backwardsUpdate(int timestep){
    return SUCCESS;
 }
 
+void BaseLayer::printU(){
+   float* h_data = getHostU();
+   printMat(h_data, bSize, fSize, ySize, xSize);
+   free(h_data);
+}
+
+void BaseLayer::printA(){
+   float* h_data = getHostA();
+   printMat(h_data, bSize, fSize, ySize, xSize);
+   free(h_data);
+}
+
+void BaseLayer::printG(){
+   float* h_data = getHostG();
+   printMat(h_data, bSize, fSize, ySize, xSize);
+   free(h_data);
+}
+
