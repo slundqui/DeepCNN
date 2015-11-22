@@ -53,6 +53,7 @@ public:
    int getXSize(){return xSize;}
    int getFSize(){return fSize;}
 
+   void printDims();
    void printU();
    void printA();
    void printGA();

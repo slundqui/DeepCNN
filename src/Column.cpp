@@ -140,7 +140,7 @@ int Column::initialize(){
 //TODO
 int Column::run(int numTimesteps){
    for(int t = 0; t < numTimesteps; t++){
-      std::cout << "Timestep " << timestep << "\n";
+      //std::cout << "Timestep " << timestep << "\n";
 
       //Update ground truth layer first
       if(groundTruthLayer){

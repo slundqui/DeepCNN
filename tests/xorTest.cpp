@@ -97,7 +97,6 @@ class xorTests: public ::testing::Test{
          delete cost;
       }
 
-
       Column* myCol;
       MatInput* input;
       MatInput* gt;
@@ -240,10 +239,6 @@ TEST_F(xorTests, xorLearn){
    //      std::cout << "---------------\nhidden A\n";
    //      hidden->printA();
    //   }
-   //   std::cout << "---------------\nEST U\n";
-   //   cost->printU();
-   //   std::cout << "---------------\nEST A\n";
-   //   cost->printA();
    //   std::cout << "---------------\nGT\n";
    //   gt->printA();
    //   if(verbose){

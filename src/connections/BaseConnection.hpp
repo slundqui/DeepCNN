@@ -41,6 +41,8 @@ public:
    virtual int forwardDeliver(){return SUCCESS;}
    virtual int backwardDeliver(){return SUCCESS;}
 
+   virtual void printDims();
+
    BaseLayer* prevLayer;
    BaseLayer* nextLayer;
 protected:

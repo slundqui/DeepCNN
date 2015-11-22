@@ -156,6 +156,8 @@ int BaseLayer::forwardUpdate(int timestep){
 
 int BaseLayer::applyGradient(){
    //TODO seperate G buffers.
+   CudaError(cudaMemcpy(d_GUData, d_GAData, gpuDataSize, cudaMemcpyDeviceToDevice));
+   CudaError(cudaDeviceSynchronize());
    return SUCCESS;
 }
 
@@ -168,6 +170,10 @@ int BaseLayer::backwardsUpdate(int timestep){
    applyGradient();
 
    return SUCCESS;
+}
+
+void BaseLayer::printDims(){
+   std::cout << "Layer " << name << " (B, F, Y, X) " << bSize << ", " << fSize << ", " << ySize << ", " << xSize << "\n";
 }
 
 void BaseLayer::printU(){

@@ -10,7 +10,7 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
    float* baseBias = checkConn->getHostB();
    int batch = input->getBSize();
 
-   bool passed = 1;
+   bool passed = true;
 
    //Check weights
    for(int weightIdx = 0; weightIdx < numWeights; weightIdx++){
@@ -46,9 +46,18 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       
       float empGrad = -(posCost - negCost)/(2*epsilon);
       float actGrad = h_actualWGrad[weightIdx];
+      //printf("Weight idx: %d  EmpGrad: %.10f EmpGrad  ActGrad: %.10f\n", weightIdx, empGrad, actGrad);
+      //std::cout << "Weight Idx: " << weightIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
+      //nan check
+      if(empGrad != empGrad || actGrad != actGrad){
+         passed = false;
+         std::cout << "Weight nan\n";
+         return passed;
+      }
       if(fabs(empGrad - actGrad) > tolerance){
          std::cout << "Weight Idx: " << weightIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
          passed = false;
+         return passed;
       }
 
       //Reset weight
@@ -81,9 +90,17 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       float empGrad = -(posCost - negCost)/(2*epsilon);
       float actGrad = h_actualBGrad[biasIdx];
 
+      //printf("Bias idx: %d  EmpGrad: %.10f EmpGrad  ActGrad: %.10f\n", biasIdx, empGrad, actGrad);
+      //nan check
+      if(empGrad != empGrad || actGrad != actGrad){
+         passed = false;
+         std::cout << "Bias nan\n";
+         return passed;
+      }
       if(fabs(empGrad - actGrad) > tolerance){
          std::cout << "Bias Idx: " << biasIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
          passed = false;
+         return passed;
       }
 
       //Reset weight

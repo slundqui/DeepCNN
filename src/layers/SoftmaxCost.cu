@@ -22,11 +22,11 @@ void softmaxTotalCostRunSize(int* gridSize, int* blockSize, int batchcount){
    calcRunSize((void*)&k_SoftmaxTotalCost, gridSize, blockSize, batchcount);
 }
 
-void softmaxTotalCost(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size){
+void softmaxTotalCost(float* truth, float* estimate, int batchcount, float* out, int gridSize, int blockSize){
    //Reset final cost device variable
    CudaError(cudaMemset(out, 0, sizeof(float)));
    CudaError(cudaDeviceSynchronize());
-   k_SoftmaxTotalCost<<< n_blocks, block_size >>> (truth, estimate, batchcount, out);
+   k_SoftmaxTotalCost<<< gridSize, blockSize>>> (truth, estimate, batchcount, out);
    CudaError(cudaDeviceSynchronize());
    CudaCallError();
 }

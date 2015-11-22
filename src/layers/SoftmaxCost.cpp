@@ -21,12 +21,13 @@ SoftmaxCost::SoftmaxCost()
 SoftmaxCost::~SoftmaxCost(){
 }
 
-//int LeastCostFunction::setParams(Column* c, std::string layerName, std::string outCostFile, std::string outAccuracyFile){
-//   if(outCostFile != ""){
-//      //TODO open cost file for writing
-//   }
-//   return BaseLayer::setParams(c, layerName);
-//}
+int SoftmaxCost::setParams(Column* c, std::string layerName, 
+      //std::string activationType,
+      std::string outCostFile,
+      std::string outAccuracyFile){
+   //Overwriting applyActivation to do softmax, so activation type here does not matter
+   return BaseCostFunction::setParams(c, layerName, "relu", outCostFile, outAccuracyFile);
+}
 
 int SoftmaxCost::initialize(){
    BaseCostFunction::initialize();
@@ -66,6 +67,14 @@ int SoftmaxCost::applyActivation(){
    return SUCCESS;
 }
 
+//Calculated in calcGradient
+int SoftmaxCost::applyGradient(){
+   calcGradient();
+   CudaError(cudaMemcpy(d_GUData, d_GAData, gpuDataSize, cudaMemcpyDeviceToDevice));
+   CudaError(cudaDeviceSynchronize());
+   return SUCCESS;
+}
+
 int SoftmaxCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
@@ -74,12 +83,12 @@ int SoftmaxCost::calcTotalCost(){
 }
 
 int SoftmaxCost::calcGradient(){
+   //std::cout << "Softmax calculating gradient\n";
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
    float alpha = 1;
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
-
    //Same gradient calculation as leastSq (est - truth)
    leastSqCalcGrad(truth, d_AData, batchcount, d_GAData, calcGradGridSize, calcGradBlockSize);
    return SUCCESS;

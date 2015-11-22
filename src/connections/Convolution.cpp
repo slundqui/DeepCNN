@@ -146,7 +146,7 @@ int Convolution::initialize(){
    convLearningRuleRunSize(&weightGridSize, &weightBlockSize, weightCount);
    convLearningRuleRunSize(&biasGridSize, &biasBlockSize, biasCount);
 
-   std::cout << "weightBlockSize " << weightBlockSize << " weightGridSize " << weightGridSize << " weightCount " << weightCount << "\n";
+   //std::cout << "weightBlockSize " << weightBlockSize << " weightGridSize " << weightGridSize << " weightCount " << weightCount << "\n";
 
    return SUCCESS;
 }

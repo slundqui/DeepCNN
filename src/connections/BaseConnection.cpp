@@ -4,6 +4,7 @@
  **/
 
 #include "BaseConnection.hpp"
+#include "../layers/BaseLayer.hpp"
 
 BaseConnection::BaseConnection(){
    prevLayer = NULL;
@@ -32,6 +33,10 @@ int BaseConnection::setParams(Column* c, std::string connName, int in_nyp, int i
       exit(BAD_PARAM);
    }
    return SUCCESS;
+}
+
+void BaseConnection::printDims(){
+   std::cout << "Connection " << name << " (nfp, prenf, nyp, nxp) " << nfp << ", " << prevLayer->getFSize() << ", " << nyp << ", " << nxp << "\n";
 }
 
 int BaseConnection::setNextLayerSize(int* ySize, int* xSize, int* fSize){

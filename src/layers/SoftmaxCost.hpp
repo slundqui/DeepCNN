@@ -17,10 +17,14 @@ public:
    virtual ~SoftmaxCost();
    virtual int initialize();
    virtual int allocate();
-//   virtual int setParams(Column* c, std::string layerName, std::string outCostFile);
+   virtual int setParams(Column* c, std::string layerName, 
+         //std::string activationType,
+         std::string outCostFile = "",
+         std::string outAccuracyFile = "");
 
    virtual int calcTotalCost();
    virtual int calcGradient();
+   virtual int applyGradient();
    virtual int applyActivation();
 protected:
 
@@ -30,11 +34,6 @@ protected:
 
    int calcGradBlockSize;
    int calcGradGridSize;
-
-   
-   
-   
-
 
 };
 #endif 

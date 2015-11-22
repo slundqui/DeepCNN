@@ -48,6 +48,7 @@ int Activation::allocate(){
 }
 
 int Activation::applyActivation(){
+   //std::cout << "Applying activation to layer " << name << "\n";
    float alpha = 1;
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
@@ -65,7 +66,8 @@ int Activation::applyActivation(){
 }
 
 int Activation::applyGradient(){
-   if(DEBUG)std::cout << "Applying gradient to layer " << name << "\n";
+   //if(DEBUG)std::cout << "Applying gradient to layer " << name << "\n";
+   //std::cout << "Applying gradient to layer " << name << "\n";
    float alpha = 1;
    float beta = 0;
    
