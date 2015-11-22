@@ -36,32 +36,32 @@ class cifarTests: public ::testing::Test{
                                10, //features
                                "/home/sheng/workspace/DeepCNNData/cifar/formatted/trainLabels.mat");//list of images
 
-         //conv1 = new Convolution();
-         //conv1->setParams(myCol, //column
-         //                "conv1", //name
-         //                3, //nyp
-         //                3, //nxp
-         //                10, //nfp
-         //                2, //ystride
-         //                2, //xstride
-         //                1, //uniform random weights
-         //                .5, //range of weights
-         //                "", //filename, not used
-         //                0, //uniform init of bias
-         //                0, //initVal of bias
-         //                "", //filename, not used
-         //                1, //Plasticity is on
-         //                .01, //dw rate
-         //                .02, //db rate
-         //                0.9, //dw momentum
-         //                0.9, //db momentum
-         //                0.004 //decay
-         //                );
+         conv1 = new Convolution();
+         conv1->setParams(myCol, //column
+                         "conv1", //name
+                         3, //nyp
+                         3, //nxp
+                         10, //nfp
+                         2, //ystride
+                         2, //xstride
+                         1, //uniform random weights
+                         .01, //range of weights
+                         "", //filename, not used
+                         0, //uniform init of bias
+                         0, //initVal of bias
+                         "", //filename, not used
+                         1, //Plasticity is on
+                         .01, //dw rate
+                         .02, //db rate
+                         0.9, //dw momentum
+                         0.9, //db momentum
+                         0.004 //decay
+                         );
 
-         //hidden1 = new Activation();
-         //hidden1->setParams(myCol,
-         //                  "hidden1",
-         //                  "relu");
+         hidden1 = new Activation();
+         hidden1->setParams(myCol,
+                           "hidden1",
+                           "relu");
 
          conv2 = new Convolution();
          conv2->setParams(myCol, //column
@@ -72,7 +72,7 @@ class cifarTests: public ::testing::Test{
                          2, //ystride
                          2, //xstride
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -88,14 +88,14 @@ class cifarTests: public ::testing::Test{
          hidden2 = new Activation();
          hidden2->setParams(myCol,
                            "hidden2",
-                           "sigmoid");
+                           "relu");
 
          fc = new FullyConnected();
          fc->setParams(myCol, //column
                          "fc", //name
                          10, //nfp
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -113,8 +113,8 @@ class cifarTests: public ::testing::Test{
                          "cost");
 
          myCol->addLayer(input);
-         //myCol->addConn(conv1);
-         //myCol->addLayer(hidden1);
+         myCol->addConn(conv1);
+         myCol->addLayer(hidden1);
          myCol->addConn(conv2);
          myCol->addLayer(hidden2);
          myCol->addConn(fc);
@@ -125,8 +125,8 @@ class cifarTests: public ::testing::Test{
          delete myCol;
          delete input;
          delete gt;
-         //delete conv1;
-         //delete hidden1;
+         delete conv1;
+         delete hidden1;
          delete conv2;
          delete hidden2;
          delete fc;
@@ -148,9 +148,10 @@ class cifarTests: public ::testing::Test{
 ///This test calculates gradients emperically and compares them with backprop gradients
 TEST_F(cifarTests, checkGradient){
    float tolerance = 10e-3;
+
    //Do not update weights but calculate gradients
-   //conv1->setGradientCheck();
-   //conv2->setGradientCheck();
+   conv1->setGradientCheck();
+   conv2->setGradientCheck();
    fc->setGradientCheck();
 
    myCol->initialize();
@@ -161,8 +162,8 @@ TEST_F(cifarTests, checkGradient){
 
    myCol->run(1);
    //Grab actual gradients calculated
-   //float* h_conv1_weight_grad = conv1->getHostWGradient();
-   //float* h_conv1_bias_grad = conv1->getHostBGradient();
+   float* h_conv1_weight_grad = conv1->getHostWGradient();
+   float* h_conv1_bias_grad = conv1->getHostBGradient();
    float* h_conv2_weight_grad = conv2->getHostWGradient();
    float* h_conv2_bias_grad = conv2->getHostBGradient();
    float* h_fc_weight_grad = fc->getHostWGradient();
@@ -170,11 +171,11 @@ TEST_F(cifarTests, checkGradient){
 
    //cost->printDim();
 
-   input->printDims();
-   conv2->printDims();
-   hidden2->printDims();
-   fc->printDims();
-   cost->printDims();
+   //input->printDims();
+   //conv2->printDims();
+   //hidden2->printDims();
+   //fc->printDims();
+   //cost->printDims();
 
    //std::cout << "---------------\nEST U\n";
    //cost->printU();
@@ -191,7 +192,7 @@ TEST_F(cifarTests, checkGradient){
    //Check gradients
    EXPECT_TRUE(gradientCheck(myCol, fc, input, gt, cost, tolerance, h_fc_weight_grad, h_fc_bias_grad));
    EXPECT_TRUE(gradientCheck(myCol, conv2, input, gt, cost, tolerance, h_conv2_weight_grad, h_conv2_bias_grad));
-   //EXPECT_TRUE(gradientCheck(myCol, conv1, input, gt, cost, tolerance, h_conv1_weight_grad, h_conv1_bias_grad));
+   EXPECT_TRUE(gradientCheck(myCol, conv1, input, gt, cost, tolerance, h_conv1_weight_grad, h_conv1_bias_grad));
 
 
    //std::cout << "input vals: \n";
