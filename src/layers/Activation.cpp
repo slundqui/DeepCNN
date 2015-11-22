@@ -64,9 +64,7 @@ int Activation::applyActivation(){
    return SUCCESS;
 }
 
-int Activation::backwardsUpdate(int timestep){
-   BaseLayer::backwardsUpdate(timestep);
-   //std::cout << "Layer " << name << " calc gradient\n";
+int Activation::applyGradient(){
    float alpha = 1;
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
@@ -87,6 +85,6 @@ int Activation::backwardsUpdate(int timestep){
       d_GData));
 
    return SUCCESS;
-
 }
+
 

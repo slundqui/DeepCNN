@@ -140,12 +140,19 @@ int BaseLayer::forwardUpdate(int timestep){
    return SUCCESS;
 }
 
+int BaseLayer::applyGradient(){
+   //TODO seperate G buffers.
+   return SUCCESS;
+}
+
 int BaseLayer::backwardsUpdate(int timestep){
-   if(!nextConn){
-      //TODO return error, but for now, its okay to not do backwards pass
-      return SUCCESS;
+   //Update current g buffer
+   if(nextConn){
+      nextConn->backwardDeliver();
    }
-   nextConn->backwardDeliver();
+   //Apply gradient activation
+   applyGradient();
+
    return SUCCESS;
 }
 

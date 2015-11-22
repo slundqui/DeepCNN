@@ -33,6 +33,7 @@ public:
 
    virtual int applyActivation();
    virtual int forwardUpdate(int timestep);
+   virtual int applyGradient();
    virtual int backwardsUpdate(int timestep);
 
    //Note: this function is inefficient, only use for debugging

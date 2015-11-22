@@ -1,11 +1,11 @@
 #include <limits.h>
 #include "gtest/gtest.h"
 #include <utils.hpp>
-#include <layers/MatInput.hpp>
+//#include <layers/MatInput.hpp>
 #include <layers/LeastSquaresCost.hpp>
 #include <layers/Activation.hpp>
 #include <connections/FullyConnected.hpp>
-#include <cmath>
+#include "test_utils.hpp"
 
 
 //Fixture for testing auto size generation
@@ -54,7 +54,8 @@ class nandTests: public ::testing::Test{
 
          cost = new LeastSquaresCost();
          cost->setParams(myCol,
-                         "cost");
+                         "cost",
+                         "sigmoid");
 
 
          myCol->addLayer(input);
@@ -70,111 +71,6 @@ class nandTests: public ::testing::Test{
          delete cost;
       }
 
-      void gradientCheck(Convolution* checkConn, float epsilon, float* h_actualWGrad, float* h_actualBGrad){
-         float tolerance = 1e-2;
-
-         int numWeights = checkConn->getNumWeights();
-         int numBias = checkConn->getNumBias();
-         float* baseWeights = checkConn->getHostW();
-         float* baseBias = checkConn->getHostB();
-         int batch = input->getBSize();
-
-         //std::cout << "numWeights " << numWeights << "numBiases" << numBias << "\n";
-
-         //Check weights
-         for(int weightIdx = 0; weightIdx < numWeights; weightIdx++){
-            //Rewind matInput layers
-            input->rewind();
-            gt->rewind();
-            //Set weight + epsilon
-            checkConn->setWeight(weightIdx, baseWeights[weightIdx] + epsilon);
-            //Run network for 1 timestep
-            myCol->run(1);
-
-            //float* h_data = hidden->getHostA();
-            //std::cout << "Pos run\n";
-            //printMat(h_data, 1, 2, 1, 1);
-
-            const float* h_cost = cost->getHostTotalCost();
-            float posCost = 0;
-            for(int b = 0; b < batch; b++){
-               posCost += h_cost[b];
-            }
-
-            //Grab neg cost
-            input->rewind();
-            gt->rewind();
-            //Set weight - epsilon
-            checkConn->setWeight(weightIdx, baseWeights[weightIdx] - epsilon);
-            //Run network for 1 timestep
-            myCol->run(1);
-
-            //h_data = hidden->getHostA();
-            //std::cout << "Neg run\n";
-            //printMat(h_data, 1, 2, 1, 1);
-
-            //Grab neg cost
-            h_cost = cost->getHostTotalCost();
-            float negCost = 0;
-            for(int b = 0; b < batch; b++){
-               negCost += h_cost[b];
-            }
-            //std::cout << "posCost " << posCost << " negCost " << negCost << "\n";
-            
-            float empGrad = -(posCost - negCost)/(2*epsilon);
-            float actGrad = h_actualWGrad[weightIdx];
-            ASSERT_TRUE(fabs(empGrad - actGrad) < tolerance);
-            //std::cout << "Weight Idx: " << weightIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
-
-            //Reset weight
-            checkConn->setWeight(weightIdx, baseWeights[weightIdx]);
-         }
-
-         //Check bias
-         for(int biasIdx = 0; biasIdx < numBias; biasIdx++){
-            //Rewind matInput layers
-            input->rewind();
-            gt->rewind();
-            //Set weight + epsilon
-            checkConn->setBias(biasIdx, baseBias[biasIdx] + epsilon);
-            //Run network for 1 timestep
-            myCol->run(1);
-
-            const float* h_cost = cost->getHostTotalCost();
-            float posCost = 0;
-            for(int b = 0; b < batch; b++){
-               posCost += h_cost[b];
-            }
-
-            //Grab neg cost
-            input->rewind();
-            gt->rewind();
-            //Set weight - epsilon
-            checkConn->setBias(biasIdx, baseBias[biasIdx] - epsilon);
-            //Run network for 1 timestep
-            myCol->run(1);
-            //Grab neg cost
-            h_cost = cost->getHostTotalCost();
-            float negCost = 0;
-            for(int b = 0; b < batch; b++){
-               negCost += h_cost[b];
-            }
-            
-            //std::cout << "posCost " << posCost << " negCost " << negCost << "\n";
-            float empGrad = -(posCost - negCost)/(2*epsilon);
-            float actGrad = h_actualBGrad[biasIdx];
-
-            ASSERT_TRUE(fabs(empGrad - actGrad) < tolerance);
-            //std::cout << "Bias Idx: " << biasIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
-
-            //Reset weight
-            checkConn->setBias(biasIdx, baseBias[biasIdx]);
-         }
-
-         free(baseWeights);
-         free(baseBias);
-      }
-
       Column* myCol;
       MatInput* input;
       MatInput* gt;
@@ -185,8 +81,8 @@ class nandTests: public ::testing::Test{
 };
 
 //This test calculates gradients emperically and compares them with backprop gradients
-TEST_F(nandTests, gradientCheck){
-   float epsilon = 10e-5;
+TEST_F(nandTests, checkGradient){
+   float tolerance = 10e-3;
    //Do not update weights but calculate gradients
    fc->setGradientCheck();
 
@@ -195,7 +91,6 @@ TEST_F(nandTests, gradientCheck){
    //Rewind matInput layers
    input->rewind();
    gt->rewind();
-
    myCol->run(1);
 
    //Grab actual gradients calculated float* h_fc_weight_grad = fc->getHostWGradient();
@@ -203,7 +98,7 @@ TEST_F(nandTests, gradientCheck){
    float* h_fc_bias_grad = fc->getHostBGradient();
 
    ////Check fc gradients
-   gradientCheck(fc, epsilon, h_fc_weight_grad, h_fc_bias_grad);
+   gradientCheck(myCol, fc, input, gt, cost, tolerance, h_fc_weight_grad, h_fc_bias_grad);
 
 }
 

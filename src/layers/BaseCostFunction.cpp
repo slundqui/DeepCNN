@@ -14,21 +14,20 @@ BaseCostFunction::BaseCostFunction()
 
 BaseCostFunction::~BaseCostFunction(){
    CudaError(cudaFree(d_TotalCost));
-   free(h_TotalCost);
 }
 
-int BaseCostFunction::setParams(Column* c, std::string layerName, std::string outCostFile, std::string outAccuracyFile){
+int BaseCostFunction::setParams(Column* c, std::string layerName, std::string activationType, std::string outCostFile, std::string outAccuracyFile){
    if(outCostFile != ""){
       //TODO open cost file for writing
    }
    if(outAccuracyFile != ""){
       //TODO open accuracy file for writing
    }
-   return BaseLayer::setParams(c, layerName);
+   return Activation::setParams(c, layerName, activationType);
 }
 
 int BaseCostFunction::initialize(){
-   BaseLayer::initialize();
+   Activation::initialize();
    //Make sure ground truth layer exists and is the same size as this layer
    BaseLayer* groundTruth = col->getGroundTruthLayer();
    assert(xSize == groundTruth->getXSize());
@@ -41,35 +40,40 @@ int BaseCostFunction::initialize(){
 }
 
 int BaseCostFunction::allocate(){
-   BaseLayer::allocate();
-   CudaError(cudaMalloc(&d_TotalCost, bSize * sizeof(float)));
-   h_TotalCost = (float*)malloc(bSize * sizeof(float));
+   Activation::allocate();
+   CudaError(cudaMalloc(&d_TotalCost, sizeof(float)));
    
    return SUCCESS;
 }
 
-const float* BaseCostFunction::getHostTotalCost(){
+float BaseCostFunction::getHostTotalCost(){
+   float h_TotalCost;
    //calculate total cost
    calcTotalCost();
    CudaError(cudaDeviceSynchronize());
-   CudaError(cudaMemcpy(h_TotalCost, d_TotalCost, bSize*sizeof(float), cudaMemcpyDeviceToHost));
+   CudaError(cudaMemcpy(&h_TotalCost, d_TotalCost, sizeof(float), cudaMemcpyDeviceToHost));
    CudaError(cudaDeviceSynchronize());
    return h_TotalCost;
 }
 
 int BaseCostFunction::forwardUpdate(int timestep){
-   BaseLayer::forwardUpdate(timestep);
+   Activation::forwardUpdate(timestep);
    //Calculate accuracy
 
    return SUCCESS;
 }
 
-int BaseCostFunction::backwardsUpdate(int timestep){
-   BaseLayer::backwardsUpdate(timestep);
+
+int BaseCostFunction::applyGradient(){
    //Sets gradient based on cost function subclass
    calcGradient();
-   return SUCCESS;
-};
+   return Activation::applyGradient();
+}
+
+//int BaseCostFunction::backwardsUpdate(int timestep){
+//   Activation::backwardsUpdate(timestep);
+//   return SUCCESS;
+//};
 
 
 

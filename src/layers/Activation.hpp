@@ -30,8 +30,9 @@ public:
 
    //TODO make virtual, but need to change test
    virtual int applyActivation();
+   virtual int applyGradient();
    //virtual int forwardUpdate(int timestep);
-   virtual int backwardsUpdate(int timestep);
+   //virtual int backwardsUpdate(int timestep);
 protected:
    cudnnActivationMode_t activationMode;
 

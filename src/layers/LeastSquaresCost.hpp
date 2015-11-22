@@ -21,7 +21,7 @@ public:
 
    virtual int calcTotalCost();
    virtual int calcGradient();
-   virtual int applyActivation();
+   //virtual int applyActivation();
 protected:
 
    //Variables used by subclasses to store optimal gpu size
