@@ -100,10 +100,10 @@ protected:
    float dbMom;
    float decay;
 
-   int weight_block_size;
-   int weight_n_blocks;
-   int bias_block_size;
-   int bias_n_blocks;
+   int weightBlockSize;
+   int weightGridSize;
+   int biasBlockSize;
+   int biasGridSize;
 
 
 

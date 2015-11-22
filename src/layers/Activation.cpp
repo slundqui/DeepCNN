@@ -77,12 +77,12 @@ int Activation::applyGradient(){
       layerDescriptor, //Layer src data, postactivation buffer
       d_AData,
       layerDescriptor, //Layer srcDiffData, gradients
-      d_GData,
+      d_GAData,
       layerDescriptor, //destData, preactivation buffer
       d_UData,
       &beta,
       layerDescriptor, //Layer destDiffData, gradients
-      d_GData));
+      d_GUData));
 
    return SUCCESS;
 }

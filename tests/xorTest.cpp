@@ -15,7 +15,8 @@ class xorTests: public ::testing::Test{
          //Simple 2 layer network that has 2 inputs, 2 hidden units, and 1 output
          batch = 1;
          
-         myCol = new Column(batch //batch
+         myCol = new Column(batch, //batch
+                            2947294032 //seed1
                             );
 
          input= new MatInput();
@@ -45,8 +46,8 @@ class xorTests: public ::testing::Test{
                          0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .1, //dw rate
-                         .2, //db rate
+                         .01, //dw rate
+                         .02, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay
@@ -68,8 +69,8 @@ class xorTests: public ::testing::Test{
                          0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .1, //dw rate
-                         .2, //db rate
+                         .01, //dw rate
+                         .02, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay
@@ -213,42 +214,51 @@ TEST_F(xorTests, checkGradient){
 TEST_F(xorTests, xorLearn){
    myCol->initialize();
 
-
-
    //myCol->run(5000);
+
+   bool verbose = true;
    
    for(int i = 0; i < 2; i++){
       std::cout << "---------------\ninput\n";
       input->printA();
-      std::cout << "---------------\nhidden U\n";
-      hidden->printU();
-      std::cout << "---------------\nhidden A\n";
-      hidden->printA();
-      std::cout << "---------------\nEST\n";
+      if(verbose){
+         std::cout << "---------------\nhidden U\n";
+         hidden->printU();
+         std::cout << "---------------\nhidden A\n";
+         hidden->printA();
+      }
+      std::cout << "---------------\nEST U\n";
+      cost->printA();
+      std::cout << "---------------\nEST A\n";
       cost->printA();
       std::cout << "---------------\nGT\n";
       gt->printA();
-      std::cout << "---------------\nEST gradient\n";
-      cost->printG();
-      std::cout << "---------------\nfc2 w gradient\n";
-      fc2->printGW();
-      std::cout << "---------------\nfc2 b gradient\n";
-      fc2->printGB();
-      std::cout << "---------------\nfc2 weights\n";
-      fc2->printW();
-      std::cout << "---------------\nfc2 bias\n";
-      fc2->printB();
-      std::cout << "---------------\nhidden G\n";
-      hidden->printG();
-      std::cout << "---------------\nfc1 w gradient\n";
-      fc1->printGW();
-      std::cout << "---------------\nfc1 b gradient\n";
-      fc1->printGB();
-      std::cout << "---------------\nfc1 weights\n";
-      fc1->printW();
-      std::cout << "---------------\nfc1 bias\n";
-      fc1->printB();
-
+      if(verbose){
+         std::cout << "---------------\nEST A gradient\n";
+         cost->printGA();
+         std::cout << "---------------\nEST U gradient\n";
+         cost->printGU();
+         std::cout << "---------------\nfc2 w gradient\n";
+         fc2->printGW();
+         std::cout << "---------------\nfc2 b gradient\n";
+         fc2->printGB();
+         std::cout << "---------------\nfc2 weights\n";
+         fc2->printW();
+         std::cout << "---------------\nfc2 bias\n";
+         fc2->printB();
+         std::cout << "---------------\nhidden A gradient\n";
+         hidden->printGA();
+         std::cout << "---------------\nhidden U gradient\n";
+         hidden->printGU();
+         std::cout << "---------------\nfc1 w gradient\n";
+         fc1->printGW();
+         std::cout << "---------------\nfc1 b gradient\n";
+         fc1->printGB();
+         std::cout << "---------------\nfc1 weights\n";
+         fc1->printW();
+         std::cout << "---------------\nfc1 bias\n";
+         fc1->printB();
+      }
       myCol->run(1);
    }
 

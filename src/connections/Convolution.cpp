@@ -3,14 +3,13 @@
  * Author: Sheng Lundquist
  **/
 
-extern "C" void convLearningRule(float* d_Weight, float* d_dWeight, float* d_GWeight, int count, float eps, float mom, float decay, int n_blocks, int block_size); 
-extern "C" void calcSizeLearn(int* h_block_size, int* h_n_blocks, int count);
 
 #include "Convolution.hpp"
 #include "../layers/BaseLayer.hpp"
 #include "../utils.hpp"
 #include "../cuda_utils.hpp"
 #include "../Column.hpp"
+#include "../kernels.hpp"
 
 Convolution::Convolution(){
    d_WData = NULL;
@@ -26,10 +25,10 @@ Convolution::Convolution(){
    workspaceSize = 0;
    d_workspaceMem = NULL;
    biasDataSize = 0;
-   weight_block_size = 0;
-   weight_n_blocks = 0;
-   bias_block_size = 0;
-   bias_n_blocks = 0;
+   weightBlockSize = 0;
+   weightGridSize = 0;
+   biasBlockSize = 0;
+   biasGridSize = 0;
 }
 
 Convolution::~Convolution(){
@@ -44,7 +43,26 @@ Convolution::~Convolution(){
    }
 }
 
-int Convolution::setParams(Column* c, std::string connName, int in_nyp, int in_nxp, int in_nfp, int in_ystride, int in_xstride, int in_weightInitType, float in_weightInitVal, std::string in_weightLoadFilename, int in_biasInitType, float in_biasInitVal, std::string in_biasLoadFilename, int in_plasticity, float in_dwRate, float in_dbRate, float in_dwMom, float in_dbMom, float in_decay){
+int Convolution::setParams(
+      Column* c, std::string connName,
+      int in_nyp,
+      int in_nxp,
+      int in_nfp,
+      int in_ystride,
+      int in_xstride,
+      int in_weightInitType, 
+      float in_weightInitVal, 
+      std::string in_weightLoadFilename, 
+      int in_biasInitType, 
+      float in_biasInitVal, 
+      std::string in_biasLoadFilename, 
+      int in_plasticity, 
+      float in_dwRate, 
+      float in_dbRate, 
+      float in_dwMom, 
+      float in_dbMom, 
+      float in_decay){
+
    weightInitType = in_weightInitType;
    assert(weightInitType == 0 || weightInitType == 1 || weightInitType == 2);
    weightInitVal = in_weightInitVal;
@@ -125,10 +143,10 @@ int Convolution::initialize(){
    biasDataSize = biasCount * sizeof(float);
 
    //Set kernel calling size
-   calcSizeLearn(&weight_block_size, &weight_n_blocks, weightCount);
-   calcSizeLearn(&bias_block_size, &bias_n_blocks, biasCount);
+   convLearningRuleRunSize(&weightGridSize, &weightBlockSize, weightCount);
+   convLearningRuleRunSize(&biasGridSize, &biasBlockSize, biasCount);
 
-   std::cout << "Weight_block_size " << weight_block_size << " weight_n_blocks " << weight_n_blocks << " weightCount " << weightCount << "\n";
+   std::cout << "weightBlockSize " << weightBlockSize << " weightGridSize " << weightGridSize << " weightCount " << weightCount << "\n";
 
    return SUCCESS;
 }
@@ -425,9 +443,9 @@ int Convolution::updateWeights(int timestep){
    //std::cout << "Connection " << name << " updating weights\n";
    CudaError(cudaDeviceSynchronize());
    //Update weights and bias
-   convLearningRule(d_WData, d_dWData, d_GWData, getNumWeights(), dwRate, dwMom, decay, weight_n_blocks, weight_block_size); 
+   convLearningRule(d_WData, d_dWData, d_GWData, getNumWeights(), dwRate, dwMom, decay, weightGridSize, weightBlockSize); 
 
-   convLearningRule(d_Bias, d_dBias, d_GBias, getNumBias(), dbRate, dbMom, 0, bias_n_blocks, bias_block_size); 
+   convLearningRule(d_Bias, d_dBias, d_GBias, getNumBias(), dbRate, dbMom, 0, biasGridSize, biasBlockSize); 
 
    return SUCCESS;
 }
@@ -486,17 +504,16 @@ int Convolution::backwardDeliver(){
 
    if(DEBUG) std::cout << "Convolution gradient called\n";
    //std::cout << "Convolution gradient called\n";
-
+   
+   
    cudnnHandle_t handle = col->getCudnnHandle();
-   cudnnTensorDescriptor_t srcDesc = prevLayer->getLayerDescriptor();
-   float* srcPtr = prevLayer->getDeviceA();
 
-   cudnnTensorDescriptor_t diffDesc = nextLayer->getLayerDescriptor();
-   float* diffPtr = nextLayer->getDeviceG();
-   //float* nextAPtr = nextLayer->getDeviceA();
+   cudnnTensorDescriptor_t prevLayerDesc = prevLayer->getLayerDescriptor();
+   cudnnTensorDescriptor_t nextLayerDesc = nextLayer->getLayerDescriptor();
 
-   cudnnTensorDescriptor_t outputDesc = prevLayer->getLayerDescriptor();
-   float* outputPtr = prevLayer->getDeviceG();
+   float* prevLayerA = prevLayer->getDeviceA();
+   float* nextLayerGU = nextLayer->getDeviceGU();
+   float* prevLayerGA = prevLayer->getDeviceGA();
 
    float alpha = 1; //input scaling
    float beta = 0; //output scaling, 0 means do not scale
@@ -506,24 +523,23 @@ int Convolution::backwardDeliver(){
    CudnnError(cudnnConvolutionBackwardBias(
       handle,
       &alpha,
-      diffDesc, //Prev layer's activations
-      diffPtr,
+      nextLayerDesc, //Next layer's gradient
+      nextLayerGU,
       &beta,
       biasDescriptor, //Bias gradient descriptor
       d_GBias //Bias gradient pointer
    ));
 
-   //TODO need sync barrier here because of workspace?
    CudaError(cudaDeviceSynchronize());
    
    //Weight gradient calculation
    CudnnError(cudnnConvolutionBackwardFilter_v3(
       handle,
       &alpha,
-      srcDesc, //Prev layer's activations
-      srcPtr,
-      diffDesc, //Next layer's gradient
-      diffPtr,
+      prevLayerDesc, //Prev layer's activations
+      prevLayerA,
+      nextLayerDesc, //Next layer's gradient
+      nextLayerGU,
       convDescriptor, //Conv descriptor
       backwardFilterAlgo, //Algorithm
       d_workspaceMem, //Workspace pointer
@@ -541,15 +557,15 @@ int Convolution::backwardDeliver(){
       &alpha,
       filterDescriptor, //Weights 
       d_WData,
-      diffDesc, //Next layer's gradient
-      diffPtr,
+      nextLayerDesc, //Next layer's gradient
+      nextLayerGU,
       convDescriptor, //Conv descriptor
       backwardDataAlgo, //Algorithm
       d_workspaceMem, //Workspace pointer
       workspaceSize, //Workspace size
       &beta,
-      outputDesc, //Prev layer gradient desc
-      outputPtr //Prev layer gradient pointer
+      prevLayerDesc, //Prev layer gradient desc
+      prevLayerGA//Prev layer gradient pointer
    ));
 
    return SUCCESS;

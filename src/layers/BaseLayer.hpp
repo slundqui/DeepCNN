@@ -40,11 +40,13 @@ public:
    //Caller's responsible for freeing memory
    float * getHostU();
    float * getHostA();
-   float * getHostG();
+   float * getHostGA();
+   float * getHostGU();
 
    float * getDeviceU(){return d_UData;}
    float * getDeviceA(){return d_AData;}
-   float * getDeviceG(){return d_GData;}
+   float * getDeviceGU(){return d_GUData;}
+   float * getDeviceGA(){return d_GAData;}
 
    int getBSize(){return bSize;}
    int getYSize(){return ySize;}
@@ -53,7 +55,8 @@ public:
 
    void printU();
    void printA();
-   void printG();
+   void printGA();
+   void printGU();
 
    cudnnTensorDescriptor_t getLayerDescriptor(){return layerDescriptor;}
    //cudnnTensorDescriptor_t getGradientDescriptor(){return cudnnGDescriptor;}
@@ -61,7 +64,8 @@ public:
 protected:
    float * d_UData; //Feedforward preactivation function buffer
    float * d_AData; //Feedforward activity buffer
-   float * d_GData; //Backpass gradient buffer
+   float * d_GAData; //Backpass gradient buffer
+   float * d_GUData; //Backpass gradient buffer
    //float * h_AData; //Host memory
    int bSize, ySize, xSize, fSize;
    cudnnTensorDescriptor_t layerDescriptor;

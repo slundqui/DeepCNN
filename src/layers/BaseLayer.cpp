@@ -13,7 +13,8 @@ BaseLayer::BaseLayer()
 {
    d_UData = NULL;
    d_AData = NULL;
-   d_GData = NULL;
+   d_GAData = NULL;
+   d_GUData = NULL;
    //h_AData = NULL;
    bSize = 0;
    ySize = 0;
@@ -26,7 +27,8 @@ BaseLayer::BaseLayer()
 BaseLayer::~BaseLayer(){
    CudaError( cudaFree(d_UData));
    CudaError( cudaFree(d_AData));
-   CudaError( cudaFree(d_GData));
+   CudaError( cudaFree(d_GAData));
+   CudaError( cudaFree(d_GUData));
    
    //Currently bugging out, maybe need to set the tensor first
    //CudnnError( cudnnDestroyTensorDescriptor(cudnnADescriptor));
@@ -63,12 +65,22 @@ float* BaseLayer::getHostA(){
    return h_outMem;
 }
 
-float* BaseLayer::getHostG(){
+float* BaseLayer::getHostGA(){
    size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
    assert(memSize == gpuDataSize);
    CudaError(cudaDeviceSynchronize());
    float * h_outMem = (float*) malloc(gpuDataSize);
-   CudaError(cudaMemcpy(h_outMem, d_GData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaMemcpy(h_outMem, d_GAData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_outMem;
+}
+
+float* BaseLayer::getHostGU(){
+   size_t memSize = bSize * ySize * xSize * fSize * sizeof(float);
+   assert(memSize == gpuDataSize);
+   CudaError(cudaDeviceSynchronize());
+   float * h_outMem = (float*) malloc(gpuDataSize);
+   CudaError(cudaMemcpy(h_outMem, d_GUData, gpuDataSize, cudaMemcpyDeviceToHost));
    CudaError(cudaDeviceSynchronize());
    return h_outMem;
 }
@@ -112,14 +124,16 @@ int BaseLayer::initialize(){
 int BaseLayer::allocate(){
    CudaError( cudaMalloc(&d_UData, gpuDataSize));
    CudaError( cudaMalloc(&d_AData, gpuDataSize));
-   CudaError( cudaMalloc(&d_GData, gpuDataSize));
+   CudaError( cudaMalloc(&d_GAData, gpuDataSize));
+   CudaError( cudaMalloc(&d_GUData, gpuDataSize));
 
    //Initialize all layer data to 0
    //int count = bSize * ySize * xSize * fSize;
 
    CudaError(cudaMemset(d_UData, 0, gpuDataSize));
    CudaError(cudaMemset(d_AData, 0, gpuDataSize));
-   CudaError(cudaMemset(d_GData, 0, gpuDataSize));
+   CudaError(cudaMemset(d_GAData, 0, gpuDataSize));
+   CudaError(cudaMemset(d_GUData, 0, gpuDataSize));
    
    //setArray(d_UData, count, 0);
    //setArray(d_AData, count, 0);
@@ -168,8 +182,14 @@ void BaseLayer::printA(){
    free(h_data);
 }
 
-void BaseLayer::printG(){
-   float* h_data = getHostG();
+void BaseLayer::printGA(){
+   float* h_data = getHostGA();
+   printMat(h_data, bSize, fSize, ySize, xSize);
+   free(h_data);
+}
+
+void BaseLayer::printGU(){
+   float* h_data = getHostGU();
    printMat(h_data, bSize, fSize, ySize, xSize);
    free(h_data);
 }

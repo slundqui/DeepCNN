@@ -9,11 +9,6 @@
 #include <cuda_runtime.h>
 #include "../kernels.hpp"
 
-//extern "C" void leastSqTotalCost(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
-//extern "C" void leastSqTotalCostRunSize(int* h_block_size, int* h_n_blocks, int fSize);
-//extern "C" void leastSqCalcGrad(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
-//extern "C" void leastSqCalcGradRunSize(int* h_block_size, int* h_n_blocks, int batchcount);
-
 LeastSquaresCost::LeastSquaresCost()
 {
    totalCostBlockSize = 0;
@@ -62,7 +57,7 @@ int LeastSquaresCost::calcGradient(){
    float alpha = 1;
    float beta = 0;
 
-   leastSqCalcGrad(truth, d_AData, batchcount, d_GData, calcGradGridSize, calcGradBlockSize);
+   leastSqCalcGrad(truth, d_AData, batchcount, d_GAData, calcGradGridSize, calcGradBlockSize);
    return SUCCESS;
 }
 

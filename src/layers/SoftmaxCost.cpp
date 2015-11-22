@@ -81,7 +81,7 @@ int SoftmaxCost::calcGradient(){
    cudnnHandle_t handle = col->getCudnnHandle();
 
    //Same gradient calculation as leastSq (est - truth)
-   leastSqCalcGrad(truth, d_AData, batchcount, d_GData, calcGradGridSize, calcGradBlockSize);
+   leastSqCalcGrad(truth, d_AData, batchcount, d_GAData, calcGradGridSize, calcGradBlockSize);
    return SUCCESS;
 }
 
