@@ -13,10 +13,10 @@ class xorTests: public ::testing::Test{
    protected:
       virtual void SetUp(){
          //Simple 2 layer network that has 2 inputs, 2 hidden units, and 1 output
-         batch = 1;
+         batch = 4;
          
          myCol = new Column(batch, //batch
-                            2947294032 //seed1
+                            12948589//seed1
                             );
 
          input= new MatInput();
@@ -25,7 +25,7 @@ class xorTests: public ::testing::Test{
                                1, //ny
                                1, //nx
                                2, //features
-                               "/home/sheng/workspace/DeepCNN/tests/testMats/binaryInput_zeros.mat");//list of images
+                               "/home/sheng/workspace/DeepCNN/tests/testMats/binaryInput.mat");//list of images
 
          gt = new MatInput();
          gt->setParams(myCol, //column name
@@ -40,14 +40,14 @@ class xorTests: public ::testing::Test{
                          "fc1", //name
                          2, //nfp
                          1, //uniform random weights
-                         .01, //range of weights
+                         1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .01, //dw rate
-                         .02, //db rate
+                         1, //dw rate
+                         2, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay
@@ -63,14 +63,14 @@ class xorTests: public ::testing::Test{
                          "fc2", //name
                          1, //nfp
                          1, //uniform random weights
-                         .01, //range of weights
+                         1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .01, //dw rate
-                         .02, //db rate
+                         1, //dw rate
+                         2, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay
@@ -216,51 +216,64 @@ TEST_F(xorTests, xorLearn){
 
    //myCol->run(5000);
 
-   bool verbose = true;
-   
-   for(int i = 0; i < 2; i++){
-      std::cout << "---------------\ninput\n";
-      input->printA();
-      if(verbose){
-         std::cout << "---------------\nhidden U\n";
-         hidden->printU();
-         std::cout << "---------------\nhidden A\n";
-         hidden->printA();
-      }
-      std::cout << "---------------\nEST U\n";
-      cost->printA();
-      std::cout << "---------------\nEST A\n";
-      cost->printA();
-      std::cout << "---------------\nGT\n";
-      gt->printA();
-      if(verbose){
-         std::cout << "---------------\nEST A gradient\n";
-         cost->printGA();
-         std::cout << "---------------\nEST U gradient\n";
-         cost->printGU();
-         std::cout << "---------------\nfc2 w gradient\n";
-         fc2->printGW();
-         std::cout << "---------------\nfc2 b gradient\n";
-         fc2->printGB();
-         std::cout << "---------------\nfc2 weights\n";
-         fc2->printW();
-         std::cout << "---------------\nfc2 bias\n";
-         fc2->printB();
-         std::cout << "---------------\nhidden A gradient\n";
-         hidden->printGA();
-         std::cout << "---------------\nhidden U gradient\n";
-         hidden->printGU();
-         std::cout << "---------------\nfc1 w gradient\n";
-         fc1->printGW();
-         std::cout << "---------------\nfc1 b gradient\n";
-         fc1->printGB();
-         std::cout << "---------------\nfc1 weights\n";
-         fc1->printW();
-         std::cout << "---------------\nfc1 bias\n";
-         fc1->printB();
+   bool verbose = false;
+
+   myCol->run(500);
+
+   float* h_est = cost->getHostA();
+   float* h_truth = gt->getHostA();
+
+   for(int b = 0; b < 4/batch; b++){
+      for(int i = 0; i < batch; i++){
+         float t_est = h_est[i] < .5 ? 0 : 1;
+         EXPECT_EQ(t_est, h_truth[i]);
       }
       myCol->run(1);
    }
+   
+   //for(int i = 0; i < 4; i++){
+   //   std::cout << "---------------\ninput\n";
+   //   input->printA();
+   //   if(verbose){
+   //      std::cout << "---------------\nhidden U\n";
+   //      hidden->printU();
+   //      std::cout << "---------------\nhidden A\n";
+   //      hidden->printA();
+   //   }
+   //   std::cout << "---------------\nEST U\n";
+   //   cost->printU();
+   //   std::cout << "---------------\nEST A\n";
+   //   cost->printA();
+   //   std::cout << "---------------\nGT\n";
+   //   gt->printA();
+   //   if(verbose){
+   //      std::cout << "---------------\nEST A gradient\n";
+   //      cost->printGA();
+   //      std::cout << "---------------\nEST U gradient\n";
+   //      cost->printGU();
+   //      std::cout << "---------------\nfc2 w gradient\n";
+   //      fc2->printGW();
+   //      std::cout << "---------------\nfc2 b gradient\n";
+   //      fc2->printGB();
+   //      std::cout << "---------------\nfc2 weights\n";
+   //      fc2->printW();
+   //      std::cout << "---------------\nfc2 bias\n";
+   //      fc2->printB();
+   //      std::cout << "---------------\nhidden A gradient\n";
+   //      hidden->printGA();
+   //      std::cout << "---------------\nhidden U gradient\n";
+   //      hidden->printGU();
+   //      std::cout << "---------------\nfc1 w gradient\n";
+   //      fc1->printGW();
+   //      std::cout << "---------------\nfc1 b gradient\n";
+   //      fc1->printGB();
+   //      std::cout << "---------------\nfc1 weights\n";
+   //      fc1->printW();
+   //      std::cout << "---------------\nfc1 bias\n";
+   //      fc1->printB();
+   //   }
+   //   myCol->run(1);
+   //}
 
    //float* h_est= cost->getHostA();
    //float* h_gt= gt->getHostA();

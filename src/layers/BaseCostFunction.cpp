@@ -65,6 +65,7 @@ int BaseCostFunction::forwardUpdate(int timestep){
 
 
 int BaseCostFunction::applyGradient(){
+   if(DEBUG) std::cout << "Cost function layer " << name << " applying gradient\n";
    //Sets gradient based on cost function subclass
    calcGradient();
    return Activation::applyGradient();

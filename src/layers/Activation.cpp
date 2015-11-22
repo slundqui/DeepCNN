@@ -65,8 +65,12 @@ int Activation::applyActivation(){
 }
 
 int Activation::applyGradient(){
+   if(DEBUG)std::cout << "Applying gradient to layer " << name << "\n";
    float alpha = 1;
    float beta = 0;
+   
+   //CudaError(cudaMemset(d_GUData, 0, gpuDataSize));
+
    cudnnHandle_t handle = col->getCudnnHandle();
    CudaError(cudaDeviceSynchronize());
 
