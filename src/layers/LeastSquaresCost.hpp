@@ -25,11 +25,11 @@ public:
 protected:
 
    //Variables used by subclasses to store optimal gpu size
-   int totalcost_block_size;
-   int totalcost_n_blocks;
+   int totalCostGridSize;
+   int totalCostBlockSize;
 
-   int calcgrad_block_size;
-   int calcgrad_n_blocks;
+   int calcGradBlockSize;
+   int calcGradGridSize;
 
    
    

@@ -7,17 +7,15 @@
 #include "../utils.hpp"
 #include "../cuda_utils.hpp"
 #include <cuda_runtime.h>
+#include "../kernels.hpp"
 
-extern "C" void softmaxTotalCost(float* estimate, float* truth, int count, int nbatch, float* out, int n_blocks, int block_size);
-extern "C" void calcSizeSoftmaxCost(int* h_block_size, int* h_n_blocks, int fSize);
-
-extern "C" void leastSqCalcGrad(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
-extern "C" void calcSizeCalcGrad(int* h_block_size, int* h_n_blocks, int batchcount);
 
 SoftmaxCost::SoftmaxCost()
 {
-   totalcost_block_size = 0;
-   totalcost_n_blocks = 0;
+   totalCostBlockSize = 0;
+   totalCostGridSize = 0;
+   calcGradBlockSize = 0;
+   calcGradGridSize = 0;
 }
 
 SoftmaxCost::~SoftmaxCost(){
@@ -35,9 +33,11 @@ int SoftmaxCost::initialize(){
 
    //Currently only allowing 1x1xf connections
    assert(xSize == 1 && ySize == 1);
-   calcSizeSoftmaxCost(&totalcost_block_size, &totalcost_n_blocks, bSize*fSize*xSize*ySize);
 
-   calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, bSize*fSize*xSize*ySize);
+   int batchcount = bSize * fSize * xSize * ySize;
+   softmaxTotalCostRunSize(&totalCostGridSize, &totalCostBlockSize, batchcount);
+
+   leastSqCalcGradRunSize(&calcGradGridSize, &calcGradBlockSize, batchcount);
 
    return SUCCESS;
 }
@@ -68,8 +68,8 @@ int SoftmaxCost::applyActivation(){
 
 int SoftmaxCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
-   int count = fSize * xSize * ySize;
-   softmaxTotalCost(d_AData, truth, count, bSize, d_TotalCost, totalcost_n_blocks, totalcost_block_size); 
+   int batchcount = bSize * fSize * xSize * ySize;
+   softmaxTotalCost(truth, d_AData, batchcount, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
    return SUCCESS;
 }
 
@@ -81,7 +81,7 @@ int SoftmaxCost::calcGradient(){
    cudnnHandle_t handle = col->getCudnnHandle();
 
    //Same gradient calculation as leastSq (est - truth)
-   leastSqCalcGrad(d_AData, truth, batchcount, d_GData, calcgrad_n_blocks, calcgrad_block_size);
+   leastSqCalcGrad(truth, d_AData, batchcount, d_GData, calcGradGridSize, calcGradBlockSize);
    return SUCCESS;
 }
 

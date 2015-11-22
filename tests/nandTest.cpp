@@ -97,8 +97,9 @@ TEST_F(nandTests, checkGradient){
    float* h_fc_weight_grad = fc->getHostWGradient();
    float* h_fc_bias_grad = fc->getHostBGradient();
 
+   
    ////Check fc gradients
-   gradientCheck(myCol, fc, input, gt, cost, tolerance, h_fc_weight_grad, h_fc_bias_grad);
+   EXPECT_TRUE(gradientCheck(myCol, fc, input, gt, cost, tolerance, h_fc_weight_grad, h_fc_bias_grad));
 
 }
 

@@ -17,3 +17,9 @@ void setArray(float* array, int count, float initVal){
    k_setArray <<< n_blocks, block_size >>> (array, count, initVal);
    CudaCallError();
 }
+
+void calcRunSize(void* kernel, int* gridSize, int* blockSize, int batchcount){
+   int minGridSize;
+   CudaError(cudaOccupancyMaxPotentialBlockSize(&minGridSize, blockSize, kernel, 0, batchcount));
+   (*gridSize) = batchcount/(*blockSize) + (batchcount%(*blockSize) == 0 ? 0 : 1);
+}

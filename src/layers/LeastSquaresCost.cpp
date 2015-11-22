@@ -7,16 +7,19 @@
 #include "../utils.hpp"
 #include "../cuda_utils.hpp"
 #include <cuda_runtime.h>
+#include "../kernels.hpp"
 
-extern "C" void leastSqTotalCost(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
-extern "C" void calcSizeTotalCost(int* h_block_size, int* h_n_blocks, int fSize);
-extern "C" void leastSqCalcGrad(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
-extern "C" void calcSizeCalcGrad(int* h_block_size, int* h_n_blocks, int batchcount);
+//extern "C" void leastSqTotalCost(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
+//extern "C" void leastSqTotalCostRunSize(int* h_block_size, int* h_n_blocks, int fSize);
+//extern "C" void leastSqCalcGrad(float* estimate, float* truth, int batchcount, float* out, int n_blocks, int block_size);
+//extern "C" void leastSqCalcGradRunSize(int* h_block_size, int* h_n_blocks, int batchcount);
 
 LeastSquaresCost::LeastSquaresCost()
 {
-   totalcost_block_size = 0;
-   totalcost_n_blocks = 0;
+   totalCostBlockSize = 0;
+   totalCostGridSize = 0;
+   calcGradBlockSize = 0;
+   calcGradGridSize = 0;
 }
 
 LeastSquaresCost::~LeastSquaresCost(){
@@ -35,8 +38,8 @@ int LeastSquaresCost::initialize(){
    //Currently only allowing 1x1xf connections
    assert(xSize == 1 && ySize == 1);
    int batchcount = bSize * fSize * xSize * ySize;
-   calcSizeTotalCost(&totalcost_block_size, &totalcost_n_blocks, batchcount);
-   calcSizeCalcGrad(&calcgrad_block_size, &calcgrad_n_blocks, batchcount);
+   leastSqTotalCostRunSize(&totalCostGridSize, &totalCostBlockSize, batchcount);
+   leastSqCalcGradRunSize(&calcGradGridSize, &calcGradBlockSize, batchcount);
 
    return SUCCESS;
 }
@@ -46,27 +49,10 @@ int LeastSquaresCost::allocate(){
    return SUCCESS;
 }
 
-//int LeastSquaresCost::applyActivation(){
-//   //float alpha = 1;
-//   //float beta = 0;
-//   //cudnnHandle_t handle = col->getCudnnHandle();
-//   //CudaError(cudaDeviceSynchronize());
-//   //CudnnError(cudnnActivationForward(
-//   //   handle,
-//   //   CUDNN_ACTIVATION_SIGMOID,
-//   //   &alpha,
-//   //   layerDescriptor,
-//   //   d_UData,
-//   //   &beta,
-//   //   layerDescriptor,
-//   //   d_AData));
-//   return SUCCESS;
-//}
-
 int LeastSquaresCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
-   leastSqTotalCost(d_AData, truth, batchcount, d_TotalCost, totalcost_n_blocks, totalcost_block_size); 
+   leastSqTotalCost(truth, d_AData, batchcount, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
    return SUCCESS;
 }
 
@@ -76,7 +62,7 @@ int LeastSquaresCost::calcGradient(){
    float alpha = 1;
    float beta = 0;
 
-   leastSqCalcGrad(d_AData, truth, batchcount, d_GData, calcgrad_n_blocks, calcgrad_block_size);
+   leastSqCalcGrad(truth, d_AData, batchcount, d_GData, calcGradGridSize, calcGradBlockSize);
    return SUCCESS;
 }
 
