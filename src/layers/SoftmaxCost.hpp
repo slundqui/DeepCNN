@@ -10,6 +10,7 @@
 #include "BaseCostFunction.hpp"
 #include "../Column.hpp"
 #include <fstream>
+#include <cmath>
 
 class SoftmaxCost: public BaseCostFunction{
 public:
@@ -24,6 +25,7 @@ public:
 
    virtual int calcTotalCost();
    virtual int calcGradient();
+   virtual int calcAccuracy();
    virtual int applyGradient();
    virtual int applyActivation();
 protected:
@@ -34,6 +36,9 @@ protected:
 
    int calcGradBlockSize;
    int calcGradGridSize;
+
+   float* h_estBuf;
+   float* h_gtBuf;
 
 };
 #endif 

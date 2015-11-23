@@ -56,9 +56,20 @@ float BaseCostFunction::getHostTotalCost(){
    return h_TotalCost;
 }
 
+float BaseCostFunction::getHostAccuracy(){
+   if(numTests == 0){
+      return 0;
+   }
+   else{
+      return (float)numCorrect/(float)numTests;
+   }
+}
+
+
 int BaseCostFunction::forwardUpdate(int timestep){
    Activation::forwardUpdate(timestep);
    //Calculate accuracy
+   calcAccuracy();
 
    return SUCCESS;
 }

@@ -61,3 +61,8 @@ int LeastSquaresCost::calcGradient(){
    return SUCCESS;
 }
 
+int LeastSquaresCost::calcAccuracy(){
+   //Not supported
+   return SUCCESS;
+}
+

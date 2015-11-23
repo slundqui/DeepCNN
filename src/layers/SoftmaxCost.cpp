@@ -16,9 +16,13 @@ SoftmaxCost::SoftmaxCost()
    totalCostGridSize = 0;
    calcGradBlockSize = 0;
    calcGradGridSize = 0;
+   h_estBuf = NULL;
+   h_gtBuf = NULL;
 }
 
 SoftmaxCost::~SoftmaxCost(){
+   free(h_estBuf);
+   free(h_gtBuf);
 }
 
 int SoftmaxCost::setParams(Column* c, std::string layerName, 
@@ -45,6 +49,9 @@ int SoftmaxCost::initialize(){
 
 int SoftmaxCost::allocate(){
    BaseCostFunction::allocate();
+   h_estBuf = (float*) malloc(gpuDataSize);
+   h_gtBuf = (float*) malloc(gpuDataSize);
+
    return SUCCESS;
 }
 
@@ -78,7 +85,7 @@ int SoftmaxCost::applyGradient(){
 int SoftmaxCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
-   softmaxTotalCost(truth, d_AData, batchcount, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
+   softmaxTotalCost(truth, d_AData, batchcount, bSize, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
    return SUCCESS;
 }
 
@@ -91,6 +98,37 @@ int SoftmaxCost::calcGradient(){
    cudnnHandle_t handle = col->getCudnnHandle();
    //Same gradient calculation as leastSq (est - truth)
    leastSqCalcGrad(truth, d_AData, batchcount, d_GAData, calcGradGridSize, calcGradBlockSize);
+   return SUCCESS;
+}
+
+int SoftmaxCost::calcAccuracy(){
+   //Get activity based on threshold
+   CudaError(cudaDeviceSynchronize());
+   float* d_GTData = col->getGroundTruthLayer()->getDeviceA();
+   CudaError(cudaMemcpy(h_estBuf, d_AData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaMemcpy(h_gtBuf, d_GTData, gpuDataSize, cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   float tolerance = 1e-6;
+
+   int count = fSize * xSize * ySize;
+   bool correct = true;
+   //Each feature 
+   for(int bi = 0; bi < bSize; bi++){
+      float maxVal = h_estBuf[bi*count];
+      int maxIdx = bi*count;
+      for(int ni = 0; ni < count; ni++){ 
+         int idx = bi*count + ni;
+         if(h_estBuf[idx] > maxVal){ 
+            maxVal = h_estBuf[idx];
+            maxIdx = idx;
+         }
+      }
+      //if GT[idx] == 1
+      if(fabs(h_gtBuf[maxIdx] - (float)1) < tolerance){
+         numCorrect++;
+      }
+      numTests++;
+   }
    return SUCCESS;
 }
 

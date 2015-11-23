@@ -212,101 +212,98 @@ TEST_F(cifarTests, checkGradient){
 
    //std::cout << "est A vals: \n"; 
    //cost->printA();
-
-
 }
 
-/////This test attempts to solve the xor problem
-//////This seed with parameters should work to find a solution
-////TEST_F(xorTests, xorLearn){
-////   myCol->initialize();
-////
-////
-////   myCol->run(5000);
-////   float* h_est= cost->getHostA();
-////   float* h_gt= gt->getHostA();
-////
-////   float tolerance = 1e-5;
-////   for(int i = 0; i < batch; i++){
-////      float h_thresh_est = h_est[i] < .5 ? 0 : 1;
-////      ASSERT_TRUE(fabs(h_gt[i]-h_thresh_est) < tolerance);
-////   }
-////
-////   //float* h_data;
-////   //std::cout << "---------------\ninput\n";
-////   //h_data= input->getHostA();
-////   //printMat(h_data, batch, 2, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nhidden U\n";
-////   //h_data= hidden->getHostU();
-////   //printMat(h_data, batch, 2, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nhidden A\n";
-////   //h_data= hidden->getHostA();
-////   //printMat(h_data, batch, 2, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nEST\n";
-////   //h_data= cost->getHostA();
-////   //printMat(h_data, batch, 1, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nGT\n";
-////   //h_data = gt->getHostA();
-////   //printMat(h_data, batch, 1, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nEST gradient\n";
-////   //h_data= cost->getHostG();
-////   //printMat(h_data, batch, 1, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc2 w gradient\n";
-////   //h_data= fc2->getHostWGradient();
-////   //printMat(h_data, 1, 2, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc2 b gradient\n";
-////   //h_data= fc2->getHostBGradient();
-////   //printMat(h_data, 1, 1, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc2 weights\n";
-////   //h_data= fc2->getHostW();
-////   //printMat(h_data, 1, 2, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc2 bias\n";
-////   //h_data= fc2->getHostB();
-////   //printMat(h_data, 1, 1, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nhidden G\n";
-////   //h_data= hidden->getHostG();
-////   //printMat(h_data, batch, 2, 1, 1);
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc1 w gradient\n";
-////   //h_data= fc1->getHostWGradient();
-////   //printMat(h_data, 2, 2, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc1 b gradient\n";
-////   //h_data= fc1->getHostBGradient();
-////   //printMat(h_data, 1, 2, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc1 weights\n";
-////   //h_data= fc1->getHostW();
-////   //printMat(h_data, 2, 2, 1,1 );
-////   //free(h_data);
-////
-////   //std::cout << "---------------\nfc1 bias\n";
-////   //h_data= fc1->getHostB();
-////   //printMat(h_data, 1, 2, 1,1 );
-////   //free(h_data);
-////
-////}
+//TEST_F(cifarTests, cifarLearn){
+//   myCol->initialize();
 //
+//   int outerRunTime = 50;
+//   int innerRunTime = 1000;
+//
+//   for(int i = 0; i < outerRunTime; i++){
+//      myCol->run(innerRunTime);
+//      //Get accuracy
+//      float accuracy = cost->getHostAccuracy();
+//      std::cout << "Run " << i*innerRunTime << " out of " << outerRunTime * innerRunTime << " accuracy: " << accuracy << "\n";
+//      
+//      //reset accuracy
+//      cost->reset();
+//   }
+//
+//   //float* h_data;
+//   //std::cout << "---------------\ninput\n";
+//   //h_data= input->getHostA();
+//   //printMat(h_data, batch, 2, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nhidden U\n";
+//   //h_data= hidden->getHostU();
+//   //printMat(h_data, batch, 2, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nhidden A\n";
+//   //h_data= hidden->getHostA();
+//   //printMat(h_data, batch, 2, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nEST\n";
+//   //h_data= cost->getHostA();
+//   //printMat(h_data, batch, 1, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nGT\n";
+//   //h_data = gt->getHostA();
+//   //printMat(h_data, batch, 1, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nEST gradient\n";
+//   //h_data= cost->getHostG();
+//   //printMat(h_data, batch, 1, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc2 w gradient\n";
+//   //h_data= fc2->getHostWGradient();
+//   //printMat(h_data, 1, 2, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc2 b gradient\n";
+//   //h_data= fc2->getHostBGradient();
+//   //printMat(h_data, 1, 1, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc2 weights\n";
+//   //h_data= fc2->getHostW();
+//   //printMat(h_data, 1, 2, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc2 bias\n";
+//   //h_data= fc2->getHostB();
+//   //printMat(h_data, 1, 1, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nhidden G\n";
+//   //h_data= hidden->getHostG();
+//   //printMat(h_data, batch, 2, 1, 1);
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc1 w gradient\n";
+//   //h_data= fc1->getHostWGradient();
+//   //printMat(h_data, 2, 2, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc1 b gradient\n";
+//   //h_data= fc1->getHostBGradient();
+//   //printMat(h_data, 1, 2, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc1 weights\n";
+//   //h_data= fc1->getHostW();
+//   //printMat(h_data, 2, 2, 1,1 );
+//   //free(h_data);
+//
+//   //std::cout << "---------------\nfc1 bias\n";
+//   //h_data= fc1->getHostB();
+//   //printMat(h_data, 1, 2, 1,1 );
+//   //free(h_data);
+//
+//}

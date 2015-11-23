@@ -76,9 +76,24 @@ cuda_add_executable(
    ${LibSrc}
 )
 
+#Add compilation files to testing suite
+cuda_add_executable(
+   cifar 
+   sims/cifar.cpp
+   ${LibSrc}
+)
+
 #Link libraries
 target_link_libraries(
    test
+   -lcudnn
+   -lgtest
+   -lpthread
+   -lmatio
+)
+
+target_link_libraries(
+   cifar 
    -lcudnn
    -lgtest
    -lpthread

@@ -21,6 +21,7 @@ public:
 
    virtual int calcTotalCost();
    virtual int calcGradient();
+   virtual int calcAccuracy();
    //virtual int applyActivation();
 protected:
 

@@ -27,10 +27,16 @@ public:
    virtual int applyGradient();
 
    float getHostTotalCost();
+   float getHostAccuracy();
 
    virtual int calcTotalCost() = 0;
    virtual int calcGradient() = 0;
+   virtual void reset(){numCorrect=0; numTests=0;}
+
+   virtual int calcAccuracy() = 0;
 protected:
    float* d_TotalCost;
+   int numCorrect;
+   int numTests;
 };
 #endif 

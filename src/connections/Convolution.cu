@@ -17,9 +17,9 @@ __global__ void k_convLearningRule(float* d_Weight, float* d_dWeight, float* d_G
    int idx = blockIdx.x * blockDim.x + threadIdx.x;
    //If within range
    if(idx < count){
-      //d_dWeight[idx] = mom*d_dWeight[idx] - decay*eps*d_Weight[idx] - eps * d_GWeight[idx];
-      //d_Weight[idx] += d_dWeight[idx];
-      d_Weight[idx] = d_Weight[idx] + (eps * d_GWeight[idx]);
+      d_dWeight[idx] = mom*d_dWeight[idx] - decay*eps*d_Weight[idx] + eps * d_GWeight[idx];
+      d_Weight[idx] += d_dWeight[idx];
+      //d_Weight[idx] = d_Weight[idx] + (eps * d_GWeight[idx]);
    }
 }
 
