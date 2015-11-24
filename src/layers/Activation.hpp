@@ -35,6 +35,7 @@ public:
    //virtual int backwardsUpdate(int timestep);
 protected:
    cudnnActivationMode_t activationMode;
+   bool isLinear;
 
 };
 #endif 

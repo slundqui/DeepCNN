@@ -15,7 +15,8 @@ __global__ void k_leastSqTotalCost(float* truth, float* estimate, int batchcount
    //If within range
    if(idx < batchcount){
       //Calculate sum of position
-      float sumMe = ((float).5/bSize) * pow(truth[idx] - estimate[idx], 2);
+      //float sumMe = ((float).5/bSize) * pow(truth[idx] - estimate[idx], 2);
+      float sumMe = .5 * pow(truth[idx] - estimate[idx], 2);
       //Atomic add into output
       atomicAdd(out, sumMe);
    }
@@ -26,7 +27,8 @@ __global__ void k_leastSqCalcGrad(float* truth, float* estimate, int batchcount,
    int idx = blockIdx.x * blockDim.x + threadIdx.x;
    //If within range
    if(idx < batchcount){
-      out[idx] = ((float)1/batch) * (truth[idx] - estimate[idx]);
+      //out[idx] = ((float)1/batch) * (truth[idx] - estimate[idx]);
+      out[idx] = (truth[idx] - estimate[idx]);
    }
 }
 

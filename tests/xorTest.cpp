@@ -79,9 +79,9 @@ class xorTests: public ::testing::Test{
          cost = new LeastSquaresCost();
          cost->setParams(myCol,
                          "cost",
-                         "sigmoid",
-                         1, //writePeriod
-                         "/home/sheng/workspace/DeepCNNData/xor/totalCost.txt" //Out cost file
+                         "sigmoid"
+                         //1, //writePeriod
+                         //"/home/sheng/workspace/DeepCNNData/xor/totalCost.txt" //Out cost file
                          );
 
          myCol->addLayer(input);

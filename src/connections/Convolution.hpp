@@ -59,6 +59,11 @@ public:
    void printGW();
    void printGB();
 
+   void setDwRate(float inval){dwRate = inval;}
+   void setDbRate(float inval){dwRate = inval;}
+   float getDwRate(){return dwRate;}
+   float getDbRate(){return dbRate;}
+
 protected:
    cudnnFilterDescriptor_t filterDescriptor;
    cudnnTensorDescriptor_t biasDescriptor;

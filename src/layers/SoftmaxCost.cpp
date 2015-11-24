@@ -29,7 +29,7 @@ int SoftmaxCost::setParams(Column* c, std::string layerName,
       std::string in_outCostFile,
       std::string in_outAccuracyFile){
    //Overwriting applyActivation to do softmax, so activation type here does not matter
-   return BaseCostFunction::setParams(c, layerName, "relu", in_writePeriod, in_outCostFile, in_outAccuracyFile);
+   return BaseCostFunction::setParams(c, layerName, "linear", in_writePeriod, in_outCostFile, in_outAccuracyFile);
 }
 
 int SoftmaxCost::initialize(){

@@ -5,10 +5,11 @@
 #include <layers/SoftmaxCost.hpp>
 #include <layers/LeastSquaresCost.hpp>
 #include <connections/FullyConnected.hpp>
+#include <connections/MaxPool.hpp>
 
 int main(void){
    int batch = 128;
-   int outerRunTime = 100; //Running for 100 epcohs
+   int outerRunTime = 8; //Running for 100 epcohs
    int innerRunTime = 400; //Each inner run time is one time through the dataset
    
    Column* myCol = new Column(batch, //batch
@@ -23,8 +24,7 @@ int main(void){
                          3, //features
                          "/home/sheng/workspace/DeepCNNData/cifar/formatted/trainData.mat");//list of images
 
-   MatInput* gt = new MatInput();
-   gt->setParams(myCol, //column name
+   MatInput* gt = new MatInput(); gt->setParams(myCol, //column name
                          "gt", //name
                          1, //ny
                          1, //nx
@@ -37,8 +37,8 @@ int main(void){
                    5, //nyp
                    5, //nxp
                    32, //nfp
-                   2, //ystride
-                   2, //xstride
+                   1, //ystride
+                   1, //xstride
                    1, //uniform random weights
                    .0001, //range of weights
                    "", //filename, not used
@@ -53,9 +53,23 @@ int main(void){
                    0.004 //decay
                    );
 
-   Activation* hidden1 = new Activation();
-   hidden1->setParams(myCol,
-                     "hidden1",
+   Activation* conv1Buf = new Activation();
+   conv1Buf->setParams(myCol,
+                     "conv1Buf",
+                     "linear");
+
+   MaxPool* pool1 = new MaxPool();
+   pool1->setParams(myCol, //column
+                   "pool1", //name
+                   3, //nyp
+                   3, //nxp
+                   2, //ystride
+                   2 //xstride
+                   );
+
+   Activation* relu1 = new Activation();
+   relu1->setParams(myCol,
+                     "relu1",
                      "relu");
 
    Convolution* conv2 = new Convolution();
@@ -64,8 +78,8 @@ int main(void){
                    5, //nyp
                    5, //nxp
                    32, //nfp
-                   2, //ystride
-                   2, //xstride
+                   1, //ystride
+                   1, //xstride
                    1, //uniform random weights
                    .01, //range of weights
                    "", //filename, not used
@@ -80,9 +94,23 @@ int main(void){
                    0.004 //decay
                    );
 
-   Activation * hidden2 = new Activation();
-   hidden2->setParams(myCol,
-                     "hidden2",
+   Activation * conv2Buf = new Activation();
+   conv2Buf->setParams(myCol,
+                     "conv2Buf",
+                     "linear");
+
+   MaxPool* pool2 = new MaxPool();
+   pool2->setParams(myCol, //column
+                   "pool2", //name
+                   3, //nyp
+                   3, //nxp
+                   2, //ystride
+                   2 //xstride
+                   );
+
+   Activation* relu2 = new Activation();
+   relu2->setParams(myCol,
+                     "relu2",
                      "relu");
 
    Convolution* conv3 = new Convolution();
@@ -91,8 +119,8 @@ int main(void){
                    5, //nyp
                    5, //nxp
                    64, //nfp
-                   2, //ystride
-                   2, //xstride
+                   1, //ystride
+                   1, //xstride
                    1, //uniform random weights
                    .01, //range of weights
                    "", //filename, not used
@@ -107,9 +135,23 @@ int main(void){
                    0.004 //decay
                    );
 
-   Activation * hidden3 = new Activation();
-   hidden3->setParams(myCol,
-                     "hidden3",
+   Activation * conv3Buf = new Activation();
+   conv3Buf->setParams(myCol,
+                     "conv3Buf",
+                     "linear");
+
+   MaxPool* pool3 = new MaxPool();
+   pool3->setParams(myCol, //column
+                   "pool3", //name
+                   3, //nyp
+                   3, //nxp
+                   2, //ystride
+                   2 //xstride
+                   );
+
+   Activation* relu3 = new Activation();
+   relu3->setParams(myCol,
+                     "relu3",
                      "relu");
 
    FullyConnected* fc64 = new FullyConnected();
@@ -130,8 +172,8 @@ int main(void){
                    0.03 //decay
                    );
 
-   Activation * hidden4 = new Activation();
-   hidden4->setParams(myCol,
+   Activation * relu4 = new Activation();
+   relu4->setParams(myCol,
                      "hidden4",
                      "relu");
    
@@ -156,29 +198,27 @@ int main(void){
    SoftmaxCost* cost = new SoftmaxCost();
    cost->setParams(myCol,
                    "cost",
-                   1,
+                   100,
                    "/home/sheng/workspace/DeepCNNData/cifar/out/totalCost.txt");
-   
-   //LeastSquaresCost* cost = new LeastSquaresCost();
-   //cost->setParams(myCol,
-   //                "cost",
-   //                "sigmoid",
-   //                1,
-   //                "/home/sheng/workspace/DeepCNNData/cifar/out/totalCost.txt");
 
    myCol->addLayer(input);
    myCol->addConn(conv1);
-   myCol->addLayer(hidden1);
+   myCol->addLayer(conv1Buf);
+   myCol->addConn(pool1);
+   myCol->addLayer(relu1);
    myCol->addConn(conv2);
-   myCol->addLayer(hidden2);
+   myCol->addLayer(conv2Buf);
+   myCol->addConn(pool2);
+   myCol->addLayer(relu2);
    myCol->addConn(conv3);
-   myCol->addLayer(hidden3);
+   myCol->addLayer(conv3Buf);
+   myCol->addConn(pool3);
+   myCol->addLayer(relu3);
    myCol->addConn(fc64);
-   myCol->addLayer(hidden4);
+   myCol->addLayer(relu4);
    myCol->addConn(fc10);
    myCol->addLayer(cost);
    myCol->addGroundTruth(gt);
-
 
    //Run
    myCol->initialize();
@@ -194,6 +234,28 @@ int main(void){
    //std::cout << "GT A" << "\n";
    //gt->printA();
 
+
+   for(int i = 0; i < outerRunTime; i++){
+      myCol->run(innerRunTime);
+      //for(int j = 0; j < innerRunTime; j++){
+      //   input->rewind();
+      //   gt->rewind();
+      //   myCol->run(1);
+      //}
+      //Get accuracy
+      float accuracy = cost->getHostAccuracy();
+      std::cout << "Run " << i*innerRunTime << " out of " << outerRunTime * innerRunTime << " accuracy: " << accuracy << "\n";
+      
+      //reset accuracy
+      cost->reset();
+   }
+
+   //Reduce learning rate by factor of 10 after 8 epochs
+   conv1->setDwRate(conv1->getDwRate()/10);
+   conv2->setDwRate(conv2->getDwRate()/10);
+   conv3->setDwRate(conv3->getDwRate()/10);
+   fc64->setDwRate(fc64->getDwRate()/10);
+   fc10->setDwRate(fc10->getDwRate()/10);
 
    for(int i = 0; i < outerRunTime; i++){
       myCol->run(innerRunTime);

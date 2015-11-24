@@ -155,7 +155,6 @@ int BaseLayer::forwardUpdate(int timestep){
 }
 
 int BaseLayer::applyGradient(){
-   //TODO seperate G buffers.
    CudaError(cudaMemcpy(d_GUData, d_GAData, gpuDataSize, cudaMemcpyDeviceToDevice));
    CudaError(cudaDeviceSynchronize());
    return SUCCESS;

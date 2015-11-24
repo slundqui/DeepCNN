@@ -46,7 +46,7 @@ class cifarTests: public ::testing::Test{
                          2, //ystride
                          2, //xstride
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -73,7 +73,7 @@ class cifarTests: public ::testing::Test{
                          2, //ystride
                          2, //xstride
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -96,7 +96,7 @@ class cifarTests: public ::testing::Test{
                          "fc", //name
                          10, //nfp
                          1, //uniform random weights
-                         .1, //range of weights
+                         .01, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
