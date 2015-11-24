@@ -10,19 +10,25 @@
 
 BaseCostFunction::BaseCostFunction()
 {
+   outCostFile = "";
+   d_TotalCost = NULL;
+   h_estBuf = NULL;
+   h_gtBuf = NULL;
 }
 
 BaseCostFunction::~BaseCostFunction(){
    CudaError(cudaFree(d_TotalCost));
+   if(outCostFile != ""){
+      costFile.close();
+   }
+   free(h_estBuf);
+   free(h_gtBuf);
 }
 
-int BaseCostFunction::setParams(Column* c, std::string layerName, std::string activationType, std::string outCostFile, std::string outAccuracyFile){
-   if(outCostFile != ""){
-      //TODO open cost file for writing
-   }
-   if(outAccuracyFile != ""){
-      //TODO open accuracy file for writing
-   }
+int BaseCostFunction::setParams(Column* c, std::string layerName, std::string activationType, int in_writePeriod, std::string in_outCostFile, std::string in_outAccuracyFile){
+   outCostFile = in_outCostFile;
+   outAccuracyFile = in_outAccuracyFile;
+   writePeriod = in_writePeriod;
    return Activation::setParams(c, layerName, activationType);
 }
 
@@ -36,12 +42,23 @@ int BaseCostFunction::initialize(){
    assert(bSize == groundTruth->getBSize());
    //Make sure cost function is the last layer
    assert(nextConn == NULL);
+
+   if(outCostFile != ""){
+      costFile.open(outCostFile.c_str(), std::ofstream::out);
+      assert(costFile.is_open());
+   }
+   if(outAccuracyFile != ""){
+      
+   }
    return SUCCESS;
 }
 
 int BaseCostFunction::allocate(){
    Activation::allocate();
    CudaError(cudaMalloc(&d_TotalCost, sizeof(float)));
+
+   h_estBuf = (float*) malloc(gpuDataSize);
+   h_gtBuf = (float*) malloc(gpuDataSize);
    
    return SUCCESS;
 }
@@ -68,7 +85,9 @@ float BaseCostFunction::getHostAccuracy(){
 
 int BaseCostFunction::forwardUpdate(int timestep){
    Activation::forwardUpdate(timestep);
-   //Calculate accuracy
+   if(outCostFile != "" && (timestep + 1) % writePeriod == 0){
+      costFile << timestep << "," << getHostTotalCost() << std::endl;
+   }
    calcAccuracy();
 
    return SUCCESS;

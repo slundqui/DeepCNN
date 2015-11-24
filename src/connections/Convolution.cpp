@@ -456,13 +456,19 @@ int Convolution::forwardDeliver(){
    cudnnHandle_t handle = col->getCudnnHandle();
    cudnnTensorDescriptor_t inputDesc = prevLayer->getLayerDescriptor();
    float* inputPtr = prevLayer->getDeviceA();
+
    cudnnTensorDescriptor_t outputDesc = nextLayer->getLayerDescriptor();
    float* outputPtr = nextLayer->getDeviceU();
+
+
+   int outputSize = nextLayer->getBSize() * nextLayer->getFSize() * nextLayer->getYSize() * nextLayer->getXSize() * sizeof(float);
+   CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemset(outputPtr, 0, outputSize));
+   CudaError(cudaDeviceSynchronize());
 
    float alpha = 1; //input scaling
    float beta = 0; //output scaling, 0 means do not scale
 
-   CudaError(cudaDeviceSynchronize());
    CudnnError(cudnnConvolutionForward(
       handle, //cudnn handle
       &alpha, //Input scaling factor
@@ -498,9 +504,7 @@ int Convolution::backwardDeliver(){
    if(!needGrad) return SUCCESS;
    //std::cout << "Layer " << name << " gradient called\n";
    
-   //Clear all gradient buffers
-   CudaError(cudaMemset(d_GWData, 0, gpuDataSize));
-   CudaError(cudaMemset(d_GBias, 0, biasDataSize));
+   CudaError(cudaDeviceSynchronize());
 
    if(DEBUG) std::cout << "Convolution gradient called\n";
    //std::cout << "Convolution gradient called\n";
@@ -514,6 +518,14 @@ int Convolution::backwardDeliver(){
    float* prevLayerA = prevLayer->getDeviceA();
    float* nextLayerGU = nextLayer->getDeviceGU();
    float* prevLayerGA = prevLayer->getDeviceGA();
+
+   CudaError(cudaDeviceSynchronize());
+
+   //Clear all gradient buffers
+   int prevLayerSize = prevLayer->getBSize() * prevLayer->getFSize() * prevLayer->getYSize() * prevLayer->getXSize() * sizeof(float);
+   CudaError(cudaMemset(prevLayerGA, 0, prevLayerSize));
+   CudaError(cudaMemset(d_GBias, 0, biasDataSize));
+   CudaError(cudaMemset(d_GWData, 0, gpuDataSize));
 
    float alpha = 1; //input scaling
    float beta = 0; //output scaling, 0 means do not scale

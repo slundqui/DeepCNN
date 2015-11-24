@@ -16,7 +16,7 @@ class xorTests: public ::testing::Test{
          batch = 4;
          
          myCol = new Column(batch, //batch
-                            12948589//seed1
+                            29383058//seed1
                             );
 
          input= new MatInput();
@@ -40,16 +40,16 @@ class xorTests: public ::testing::Test{
                          "fc1", //name
                          2, //nfp
                          1, //uniform random weights
-                         1, //range of weights
+                         .1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         1, //dw rate
-                         2, //db rate
-                         0, //dw momentum
-                         0, //db momentum
+                         .1, //dw rate
+                         .2, //db rate
+                         .9, //dw momentum
+                         .9, //db momentum
                          0 //decay
                          );
 
@@ -62,24 +62,27 @@ class xorTests: public ::testing::Test{
          fc2->setParams(myCol, //column
                          "fc2", //name
                          1, //nfp
-                         1, //uniform random weights
+                         .1, //uniform random weights
                          1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         1, //dw rate
-                         2, //db rate
-                         0, //dw momentum
-                         0, //db momentum
+                         .1, //dw rate
+                         .2, //db rate
+                         .5, //dw momentum
+                         .5, //db momentum
                          0 //decay
                          );
 
          cost = new LeastSquaresCost();
          cost->setParams(myCol,
                          "cost",
-                         "sigmoid");
+                         "sigmoid",
+                         1, //writePeriod
+                         "/home/sheng/workspace/DeepCNNData/xor/totalCost.txt" //Out cost file
+                         );
 
          myCol->addLayer(input);
          myCol->addConn(fc1);
@@ -119,8 +122,7 @@ class xorTests: public ::testing::Test{
 //   //printMat(h_inData, 4, 1, 1, 2);
 //   //free(h_inData);
 //
-//   //h_inData = gt->getHostA();
-//   //std::cout << "GT data : \n";
+//   //h_inData = gt->getHostA(); //   //std::cout << "GT data : \n";
 //   //printMat(h_inData, 4, 1, 1, 1);
 //   //free(h_inData);
 //
@@ -215,22 +217,29 @@ TEST_F(xorTests, xorLearn){
 
    //myCol->run(5000);
 
-   bool verbose = false;
+   bool verbose = true;
 
-   myCol->run(500);
+   myCol->run(5000);
 
    float* h_est = cost->getHostA();
    float* h_truth = gt->getHostA();
 
    for(int b = 0; b < 4/batch; b++){
       for(int i = 0; i < batch; i++){
+         //std::cout << "---------------\ninput\n";
+         //input->printA();
+         //std::cout << "---------------\nGT\n";
+         //gt->printA();
+         //std::cout << "---------------\nEST\n";
+         //cost->printA();
+
          float t_est = h_est[i] < .5 ? 0 : 1;
          EXPECT_EQ(t_est, h_truth[i]);
       }
       myCol->run(1);
    }
    
-   //for(int i = 0; i < 4; i++){
+   //for(int i = 0; i < 1; i++){
    //   std::cout << "---------------\ninput\n";
    //   input->printA();
    //   if(verbose){
@@ -241,6 +250,8 @@ TEST_F(xorTests, xorLearn){
    //   }
    //   std::cout << "---------------\nGT\n";
    //   gt->printA();
+   //   std::cout << "---------------\nEST\n";
+   //   cost->printA();
    //   if(verbose){
    //      std::cout << "---------------\nEST A gradient\n";
    //      cost->printGA();

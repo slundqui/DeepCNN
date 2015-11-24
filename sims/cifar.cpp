@@ -3,11 +3,13 @@
 #include <Column.hpp>
 #include <layers/MatInput.hpp>
 #include <layers/SoftmaxCost.hpp>
+#include <layers/LeastSquaresCost.hpp>
 #include <connections/FullyConnected.hpp>
 
 int main(void){
-   //Simple 3 layer network, no pooling
    int batch = 128;
+   int outerRunTime = 100; //Running for 100 epcohs
+   int innerRunTime = 400; //Each inner run time is one time through the dataset
    
    Column* myCol = new Column(batch, //batch
                       1234567890//seed
@@ -121,8 +123,8 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .1, //dw rate
-                   .2, //db rate
+                   .001, //dw rate
+                   .002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
                    0.03 //decay
@@ -144,8 +146,8 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .1, //dw rate
-                   .2, //db rate
+                   .001, //dw rate
+                   .002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
                    0.03 //decay
@@ -153,7 +155,16 @@ int main(void){
 
    SoftmaxCost* cost = new SoftmaxCost();
    cost->setParams(myCol,
-                   "cost");
+                   "cost",
+                   1,
+                   "/home/sheng/workspace/DeepCNNData/cifar/out/totalCost.txt");
+   
+   //LeastSquaresCost* cost = new LeastSquaresCost();
+   //cost->setParams(myCol,
+   //                "cost",
+   //                "sigmoid",
+   //                1,
+   //                "/home/sheng/workspace/DeepCNNData/cifar/out/totalCost.txt");
 
    myCol->addLayer(input);
    myCol->addConn(conv1);
@@ -172,11 +183,25 @@ int main(void){
    //Run
    myCol->initialize();
 
-   int outerRunTime = 5000;
-   int innerRunTime = 1000;
+   //for(int i = 0; i < 10; i++){
+   //   input->rewind();
+   //   gt->rewind();
+   //   myCol->run(1);
+   //}
+
+   //std::cout << "Estimate A" << "\n";
+   //cost->printA();
+   //std::cout << "GT A" << "\n";
+   //gt->printA();
+
 
    for(int i = 0; i < outerRunTime; i++){
       myCol->run(innerRunTime);
+      //for(int j = 0; j < innerRunTime; j++){
+      //   input->rewind();
+      //   gt->rewind();
+      //   myCol->run(1);
+      //}
       //Get accuracy
       float accuracy = cost->getHostAccuracy();
       std::cout << "Run " << i*innerRunTime << " out of " << outerRunTime * innerRunTime << " accuracy: " << accuracy << "\n";

@@ -20,6 +20,7 @@ public:
    virtual int allocate();
    virtual int setParams(Column* c, std::string layerName, 
          //std::string activationType,
+         int writePeriod = 1,
          std::string outCostFile = "",
          std::string outAccuracyFile = "");
 
@@ -37,8 +38,6 @@ protected:
    int calcGradBlockSize;
    int calcGradGridSize;
 
-   float* h_estBuf;
-   float* h_gtBuf;
 
 };
 #endif 

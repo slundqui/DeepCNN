@@ -3,6 +3,7 @@
 #include <utils.hpp>
 //#include <layers/MatInput.hpp>
 #include <layers/SoftmaxCost.hpp>
+#include <layers/LeastSquaresCost.hpp>
 #include <layers/Activation.hpp>
 #include <connections/FullyConnected.hpp>
 #include <cmath>
@@ -14,7 +15,7 @@ class cifarTests: public ::testing::Test{
    protected:
       virtual void SetUp(){
          //Simple 3 layer network, no pooling
-         batch = 1;
+         batch = 4;
          
          myCol = new Column(batch, //batch
                             1234567890//seed
@@ -45,7 +46,7 @@ class cifarTests: public ::testing::Test{
                          2, //ystride
                          2, //xstride
                          1, //uniform random weights
-                         .01, //range of weights
+                         .1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -72,7 +73,7 @@ class cifarTests: public ::testing::Test{
                          2, //ystride
                          2, //xstride
                          1, //uniform random weights
-                         .01, //range of weights
+                         .1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -95,7 +96,7 @@ class cifarTests: public ::testing::Test{
                          "fc", //name
                          10, //nfp
                          1, //uniform random weights
-                         .01, //range of weights
+                         .1, //range of weights
                          "", //filename, not used
                          0, //uniform init of bias
                          0, //initVal of bias
@@ -107,6 +108,11 @@ class cifarTests: public ::testing::Test{
                          0.9, //db momentum
                          0.03 //decay
                          );
+
+         //cost = new LeastSquaresCost();
+         //cost->setParams(myCol,
+         //                "cost",
+         //                "sigmoid");
 
          cost = new SoftmaxCost();
          cost->setParams(myCol,
@@ -139,6 +145,7 @@ class cifarTests: public ::testing::Test{
       Activation* hidden1;
       Activation* hidden2;
       SoftmaxCost* cost;
+      //LeastSquaresCost* cost;
       Convolution* conv1;
       Convolution* conv2;
       FullyConnected* fc;

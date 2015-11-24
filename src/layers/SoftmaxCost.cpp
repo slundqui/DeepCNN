@@ -16,21 +16,20 @@ SoftmaxCost::SoftmaxCost()
    totalCostGridSize = 0;
    calcGradBlockSize = 0;
    calcGradGridSize = 0;
-   h_estBuf = NULL;
-   h_gtBuf = NULL;
+   numCorrect = 0;
+   numTests = 0;
 }
 
 SoftmaxCost::~SoftmaxCost(){
-   free(h_estBuf);
-   free(h_gtBuf);
 }
 
 int SoftmaxCost::setParams(Column* c, std::string layerName, 
       //std::string activationType,
-      std::string outCostFile,
-      std::string outAccuracyFile){
+      int in_writePeriod,
+      std::string in_outCostFile,
+      std::string in_outAccuracyFile){
    //Overwriting applyActivation to do softmax, so activation type here does not matter
-   return BaseCostFunction::setParams(c, layerName, "relu", outCostFile, outAccuracyFile);
+   return BaseCostFunction::setParams(c, layerName, "relu", in_writePeriod, in_outCostFile, in_outAccuracyFile);
 }
 
 int SoftmaxCost::initialize(){
@@ -49,8 +48,6 @@ int SoftmaxCost::initialize(){
 
 int SoftmaxCost::allocate(){
    BaseCostFunction::allocate();
-   h_estBuf = (float*) malloc(gpuDataSize);
-   h_gtBuf = (float*) malloc(gpuDataSize);
 
    return SUCCESS;
 }
@@ -77,8 +74,8 @@ int SoftmaxCost::applyActivation(){
 //Calculated in calcGradient
 int SoftmaxCost::applyGradient(){
    calcGradient();
-   CudaError(cudaMemcpy(d_GUData, d_GAData, gpuDataSize, cudaMemcpyDeviceToDevice));
    CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemcpy(d_GUData, d_GAData, gpuDataSize, cudaMemcpyDeviceToDevice));
    return SUCCESS;
 }
 
@@ -93,11 +90,8 @@ int SoftmaxCost::calcGradient(){
    //std::cout << "Softmax calculating gradient\n";
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
-   float alpha = 1;
-   float beta = 0;
-   cudnnHandle_t handle = col->getCudnnHandle();
    //Same gradient calculation as leastSq (est - truth)
-   leastSqCalcGrad(truth, d_AData, batchcount, d_GAData, calcGradGridSize, calcGradBlockSize);
+   leastSqCalcGrad(truth, d_AData, batchcount, bSize, d_GAData, calcGradGridSize, calcGradBlockSize);
    return SUCCESS;
 }
 

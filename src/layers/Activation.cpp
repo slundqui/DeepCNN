@@ -53,6 +53,9 @@ int Activation::applyActivation(){
    float beta = 0;
    cudnnHandle_t handle = col->getCudnnHandle();
    CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemset(d_AData, 0, gpuDataSize));
+   CudaError(cudaDeviceSynchronize());
+
    CudnnError(cudnnActivationForward(
       handle,
       activationMode,
@@ -74,6 +77,8 @@ int Activation::applyGradient(){
    //CudaError(cudaMemset(d_GUData, 0, gpuDataSize));
 
    cudnnHandle_t handle = col->getCudnnHandle();
+   CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemset(d_GUData, 0, gpuDataSize));
    CudaError(cudaDeviceSynchronize());
 
    CudnnError(cudnnActivationBackward(

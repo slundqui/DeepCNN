@@ -12,7 +12,7 @@ __global__ void k_SoftmaxTotalCost(float* truth, float* estimate, int batchcount
    //If within range
    if(idx < batchcount){
       //Calculate sum of position
-      float sumMe = -((float)1/bSize) * truth[idx] * log(estimate[idx]);
+      float sumMe = ((float)-1/bSize) * truth[idx] * log(estimate[idx]);
       //Atomic add into output
       atomicAdd(out, sumMe);
    }

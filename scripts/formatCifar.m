@@ -29,7 +29,9 @@ for batch_i = 1:length(trainNames)
 end
 
 %Normalize and cast to float
-trainData = single(trainData)/255;
+trainData = single(trainData);
+trainData = (trainData - mean(trainData(:)))/std(trainData(:));
+
 %Bin labels into 10 categories
 outTrainLabels = single(zeros(1, 1, 10, length(trainLabels)));
 
@@ -54,6 +56,7 @@ data = reshape(data, [numEx, 32, 32, 3]);
 %DeepCNN expects x, y, color, image
 data = permute(data, [2, 3, 4, 1]);
 data = single(data);
+data = (trainData - mean(trainData(:)))/std(trainData(:));
 
 save([outDir, 'testData.mat'], 'data', '-v6');
 

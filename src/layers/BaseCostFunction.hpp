@@ -19,8 +19,9 @@ public:
    virtual int allocate();
    virtual int setParams(Column* c, std::string layerName, 
          std::string activationType,
-         std::string outCostFile = "",
-         std::string outAccuracyFile = "");
+         int in_writePeriod = 1,
+         std::string in_outCostFile = "",
+         std::string in_outAccuracyFile = "");
 
    virtual int forwardUpdate(int timestep);
    //virtual int backwardsUpdate(int timestep);
@@ -38,5 +39,12 @@ protected:
    float* d_TotalCost;
    int numCorrect;
    int numTests;
+   int writePeriod;
+   std::ofstream costFile;
+   std::string outCostFile;
+   std::string outAccuracyFile;
+
+   float* h_estBuf;
+   float* h_gtBuf;
 };
 #endif 
