@@ -1,7 +1,7 @@
 # DeepCNN
 A repository for building a GPU accelerated DeepCNN framework
 
-##Prerequisites:
+##Prerequisites
 - MatIO (a library for writing and reading Matlab .mat files)
 - Cuda 7.5
 - CuDNN v3
@@ -12,19 +12,19 @@ A repository for building a GPU accelerated DeepCNN framework
 - Git
 - Octave
 
-##Build:
-Clone the repository from github: 
+##Build
+-Clone the repository from github: 
 ```
 git clone https://github.com/slundqui/DeepCNN.git
 ```
-
-Compile
+-Run CMake
 ```
 ccmake .
 ```
-- fill out appropriate fields
-- press g
-- press c
+- Fill out appropriate fields
+- Press g
+- Press c
+- Compile
 ```
 make
 ```
