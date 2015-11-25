@@ -14,27 +14,27 @@ A repository for building a GPU accelerated DeepCNN framework
 
 ##Build:
 Clone the repository from github: 
-~~~~~~~~~~~~~~~~
+```
 git clone https://github.com/slundqui/DeepCNN.git
-~~~~~~~~~~~~~~~~
+```
 
 Compile
-~~~~~~~~~~~~~~~~
+```
 ccmake .
-~~~~~~~~~~~~~~~~
-<fill out appropriate fields>
-<press g>
-<press c>
-~~~~~~~~~~~~~~~~
+```
+fill out appropriate fields
+press g
+press c
+```
 make
-~~~~~~~~~~~~~~~~
+```
 
 ##Run
 Download CIFAR-10 database.
 Run script for formatting mat file, editing file to correct path
-~~~~~~~~~~~~~~~~
+```
 octave <repoBaseDir>/scripts/formatCifar.m
-~~~~~~~~~~~~~~~~
+```
 
 Executables in <repoBaseDir>/bin:
 - test: The testing suite for the toolkit
