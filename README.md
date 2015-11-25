@@ -22,9 +22,9 @@ Compile
 ```
 ccmake .
 ```
-fill out appropriate fields
-press g
-press c
+- fill out appropriate fields
+- press g
+- press c
 ```
 make
 ```
