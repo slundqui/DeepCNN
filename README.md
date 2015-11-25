@@ -13,11 +13,11 @@ A repository for building a GPU accelerated DeepCNN framework
 - Octave
 
 ##Build
--Clone the repository from github: 
+- Clone the repository from github: 
 ```
 git clone https://github.com/slundqui/DeepCNN.git
 ```
--Run CMake
+- Run CMake
 ```
 ccmake .
 ```
