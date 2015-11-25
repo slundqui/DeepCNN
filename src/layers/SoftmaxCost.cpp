@@ -78,18 +78,6 @@ int SoftmaxCost::applyGradient(){
    return SUCCESS;
 }
 
-int SoftmaxCost::calcTotalCost(){
-   float* truth = col->getGroundTruthLayer()->getDeviceA();
-   int batchcount = bSize * fSize * xSize * ySize;
-   float h_sumMe;
-   softmaxTotalCost(truth, d_AData, batchcount, bSize, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
-   CudaError(cudaDeviceSynchronize());
-   CudaError(cudaMemcpy(&h_sumMe, d_TotalCost, sizeof(float), cudaMemcpyDeviceToHost));
-   CudaError(cudaDeviceSynchronize());
-   sumCost += h_sumMe;
-   return SUCCESS;
-}
-
 int SoftmaxCost::calcGradient(){
    //std::cout << "Softmax calculating gradient\n";
    float* truth = col->getGroundTruthLayer()->getDeviceA();
@@ -99,13 +87,24 @@ int SoftmaxCost::calcGradient(){
    return SUCCESS;
 }
 
-int SoftmaxCost::calcAccuracy(){
+float SoftmaxCost::calcCost(){
+   float* truth = col->getGroundTruthLayer()->getDeviceA();
+   int batchcount = bSize * fSize * xSize * ySize;
+   float h_cost;
+   CudaError(cudaDeviceSynchronize());
+   softmaxTotalCost(truth, d_AData, batchcount, bSize, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
+   CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemcpy(&h_cost, d_TotalCost, sizeof(float), cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   return h_cost;
+}
+
+int SoftmaxCost::calcCorrect(){
    //Get activity based on threshold
    CudaError(cudaDeviceSynchronize());
    float tolerance = 1e-6;
-
+   int correct = 0;
    int count = fSize * xSize * ySize;
-   bool correct = true;
    //Each feature 
    for(int bi = 0; bi < bSize; bi++){
       float maxVal = h_estBuf[bi*count];
@@ -119,10 +118,9 @@ int SoftmaxCost::calcAccuracy(){
       }
       //if GT[idx] == 1
       if(fabs(h_gtBuf[maxIdx] - (float)1) < tolerance){
-         numCorrect++;
+         correct++;
       }
-      numTests++;
    }
-   return SUCCESS;
+   return correct;
 }
 

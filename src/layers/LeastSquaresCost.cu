@@ -27,8 +27,8 @@ __global__ void k_leastSqCalcGrad(float* truth, float* estimate, int batchcount,
    int idx = blockIdx.x * blockDim.x + threadIdx.x;
    //If within range
    if(idx < batchcount){
-      out[idx] = ((float)1/batch) * (truth[idx] - estimate[idx]);
-      //out[idx] = (truth[idx] - estimate[idx]);
+      //out[idx] = ((float)1/batch) * (truth[idx] - estimate[idx]);
+      out[idx] = (truth[idx] - estimate[idx]);
    }
 }
 

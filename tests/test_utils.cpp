@@ -26,7 +26,7 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       //std::cout << "Pos run\n";
       //printMat(h_data, 1, 2, 1, 1);
 
-      float posCost = cost->getHostTotalCost();
+      float posCost = cost->getCurrentCost();
 
       //Grab neg cost
       input->rewind();
@@ -41,7 +41,7 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       //printMat(h_data, 1, 2, 1, 1);
 
       //Grab neg cost
-      float negCost = cost->getHostTotalCost();
+      float negCost = cost->getCurrentCost();
       //std::cout << "posCost " << posCost << " negCost " << negCost << "\n";
       
       float empGrad = -(posCost - negCost)/(2*epsilon);
@@ -49,9 +49,15 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       //printf("Weight idx: %d  EmpGrad: %.10f EmpGrad  ActGrad: %.10f\n", weightIdx, empGrad, actGrad);
       //std::cout << "Weight Idx: " << weightIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
       //nan check
-      if(empGrad != empGrad || actGrad != actGrad){
+      if(empGrad != empGrad){
+         std::cout << "Weight empGrad NAN\n";
          passed = false;
-         std::cout << "Weight nan\n";
+      }
+      if(actGrad != actGrad){
+         std::cout << "Weight actGrad NAN\n";
+         passed = false;
+      }
+      if(!passed){
          //return passed;
       }
       if(fabs(empGrad - actGrad) > tolerance){
@@ -74,7 +80,7 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       //Run network for 1 timestep
       myCol->run(1);
 
-      float posCost = cost->getHostTotalCost();
+      float posCost = cost->getCurrentCost();
 
       //Grab neg cost
       input->rewind();
@@ -84,7 +90,7 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       //Run network for 1 timestep
       myCol->run(1);
       //Grab neg cost
-      float negCost = cost->getHostTotalCost();
+      float negCost = cost->getCurrentCost();
       
       //std::cout << "posCost " << posCost << " negCost " << negCost << "\n";
       float empGrad = -(posCost - negCost)/(2*epsilon);
@@ -92,9 +98,15 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
 
       //printf("Bias idx: %d  EmpGrad: %.10f EmpGrad  ActGrad: %.10f\n", biasIdx, empGrad, actGrad);
       //nan check
-      if(empGrad != empGrad || actGrad != actGrad){
+      if(empGrad != empGrad){
+         std::cout << "Bias empGrad NAN\n";
          passed = false;
-         std::cout << "Bias nan\n";
+      }
+      if(actGrad != actGrad){
+         std::cout << "Bias actGrad NAN\n";
+         passed = false;
+      }
+      if(!passed){
          //return passed;
       }
       if(fabs(empGrad - actGrad) > tolerance){

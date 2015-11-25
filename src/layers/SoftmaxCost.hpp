@@ -25,9 +25,10 @@ public:
          std::string accuracyFilename = "",
          std::string estFilename = "");
 
-   virtual int calcTotalCost();
+   virtual float calcCost();
+   virtual int calcCorrect();
+
    virtual int calcGradient();
-   virtual int calcAccuracy();
    virtual int applyGradient();
    virtual int applyActivation();
 protected:

@@ -19,9 +19,10 @@ public:
    virtual int allocate();
 //   virtual int setParams(Column* c, std::string layerName, std::string outCostFile);
 
-   virtual int calcTotalCost();
+   virtual float calcCost();
+   virtual int calcCorrect();
+
    virtual int calcGradient();
-   virtual int calcAccuracy();
    //virtual int applyActivation();
 protected:
 

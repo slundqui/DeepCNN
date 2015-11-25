@@ -18,6 +18,9 @@ BaseCostFunction::BaseCostFunction()
    numCorrect = 0;
    numTests = 0;
    sumCost = 0;
+   currCost = 0;
+   currCorrect = 0;
+   writePeriod = 0;
 }
 
 BaseCostFunction::~BaseCostFunction(){
@@ -81,6 +84,7 @@ int BaseCostFunction::initialize(){
 int BaseCostFunction::allocate(){
    Activation::allocate();
    CudaError(cudaMalloc(&d_TotalCost, sizeof(float)));
+   CudaError(cudaMemset(d_TotalCost, 0, sizeof(float)));
 
    h_estBuf = (float*) malloc(gpuDataSize);
    h_gtBuf = (float*) malloc(gpuDataSize);
@@ -88,7 +92,11 @@ int BaseCostFunction::allocate(){
    return SUCCESS;
 }
 
-float BaseCostFunction::getHostTotalCost(){
+float BaseCostFunction::getCurrentCost(){
+   return currCost;
+}
+
+float BaseCostFunction::getAverageCost(){
    if(numTests == 0){
       return 0;
    }
@@ -97,7 +105,7 @@ float BaseCostFunction::getHostTotalCost(){
    }
 }
 
-float BaseCostFunction::getHostAccuracy(){
+float BaseCostFunction::getAccuracy(){
    if(numTests == 0){
       return 0;
    }
@@ -135,7 +143,6 @@ int BaseCostFunction::updateHostData(){
    CudaError(cudaDeviceSynchronize());
    CudaError(cudaMemcpy(h_estBuf, d_AData, gpuDataSize, cudaMemcpyDeviceToHost));
    CudaError(cudaMemcpy(h_gtBuf, d_GTData, gpuDataSize, cudaMemcpyDeviceToHost));
-   CudaError(cudaDeviceSynchronize());
    return SUCCESS;
 }
 
@@ -150,8 +157,12 @@ int BaseCostFunction::forwardUpdate(int timestep){
 
    updateHostData();
 
-   calcTotalCost();
-   calcAccuracy();
+   currCost = calcCost();
+   currCorrect = calcCorrect();
+   sumCost += currCost;
+   numCorrect += currCorrect;
+   numTests += bSize;
+
 
    if(estFilename != ""){
       writeEst();
@@ -159,11 +170,11 @@ int BaseCostFunction::forwardUpdate(int timestep){
    //timestep + 1 to skip timestep 0
    if((timestep+1) % writePeriod == 0){
       if(costFilename != ""){
-         costFile << timestep << "," << getHostTotalCost() << std::endl;
+         costFile << timestep << "," << getAverageCost() << std::endl;
       }
       if(accuracyFilename != ""){
-         accuracyFile << timestep << "," << getHostAccuracy() << std::endl;
-         std::cout << "Timestep: " << timestep << " accuracy " << getHostAccuracy() << "\n";
+         accuracyFile << timestep << "," << getAccuracy() << std::endl;
+         std::cout << "Timestep: " << timestep << " accuracy " << getAccuracy() << "\n";
       }
    }
 

@@ -384,6 +384,7 @@ int Convolution::initializeWeights(){
          h_randArray[i] = randVal;
       }
       //Copy to weights
+      CudaError(cudaDeviceSynchronize());
       CudaError(cudaMemcpy(d_WData, h_randArray, count*sizeof(float), cudaMemcpyHostToDevice));
       CudaError(cudaDeviceSynchronize());
       free(h_randArray);
@@ -411,7 +412,7 @@ int Convolution::initializeBias(){
       assert(biasInitVal != 0);
       for(int i = 0; i < count; i++){
          //Random float between 0 and 1
-         float randVal = ((float)rand())/RAND_MAX;
+         float randVal = ((float)(rand()%1000))/999;
          //Random float between -1 and 1 
          randVal = randVal*2 - 1;
          //Random float between -biasInitVal and +biasInitVal

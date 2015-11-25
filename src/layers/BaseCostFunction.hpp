@@ -28,19 +28,17 @@ public:
    //virtual int backwardsUpdate(int timestep);
    virtual int applyGradient();
 
-   float getHostTotalCost();
-   float getHostAccuracy();
+   float getCurrentCost();
+   float getAverageCost();
+   float getAccuracy();
 
-   virtual int calcTotalCost() = 0;
+   virtual float calcCost() = 0;
    virtual int calcGradient() = 0;
 
-   virtual int calcAccuracy() = 0;
+   virtual int calcCorrect() = 0;
 protected:
    virtual void reset(){sumCost=0; numCorrect=0; numTests=0;}
    float* d_TotalCost;
-   int numCorrect;
-   int numTests;
-   float sumCost;
    int writePeriod;
    std::ofstream costFile;
    std::ofstream accuracyFile;
@@ -54,5 +52,11 @@ protected:
 private:
    int writeEst();
    int updateHostData();
+
+   float sumCost;
+   int numCorrect;
+   float currCost;
+   int currCorrect;
+   int numTests;
 };
 #endif 

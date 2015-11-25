@@ -38,16 +38,15 @@ class nandTests: public ::testing::Test{
          fc->setParams(myCol, //column
                          "fc", //name
                          1, //nfp
-                         0, //uniform init of weights
-                         1, //initVal of weights
+                         1, //uniform init of weights
+                         .01, //initVal of weights
                          "", //filename, not used
                          1, //uniform init of bias
-                         1,
-                         //initVal of bias
+                         .01, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .1, //dw rate
-                         .1, //db rate
+                         .01, //dw rate
+                         .01, //db rate
                          0, //dw momentum
                          0, //db momentum
                          0 //decay

@@ -239,7 +239,7 @@ int main(void){
    //Initialize network
    myCol->initialize();
 
-   int numEpochs = 258; //Running for 100 epcohs
+   int numEpochs = 260; //Running for 100 epcohs
 
    //Run and write to mat file, TODO put this into layers
    for(int i = 2; i < numEpochs; i++){
