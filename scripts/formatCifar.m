@@ -56,7 +56,7 @@ data = reshape(data, [numEx, 32, 32, 3]);
 %DeepCNN expects x, y, color, image
 data = permute(data, [2, 3, 4, 1]);
 data = single(data);
-data = (trainData - mean(trainData(:)))/std(trainData(:));
+data = (data - mean(data(:)))/std(data(:));
 
 save([outDir, 'testData.mat'], 'data', '-v6');
 

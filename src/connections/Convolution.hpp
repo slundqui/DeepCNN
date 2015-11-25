@@ -64,6 +64,12 @@ public:
    float getDwRate(){return dwRate;}
    float getDbRate(){return dbRate;}
 
+   virtual void writeWeights(std::string outFilename);
+   virtual void writeBias(std::string outFilename);
+
+   virtual int loadBias(std::string filename);
+   virtual int loadWeights(std::string filename);
+
 protected:
    cudnnFilterDescriptor_t filterDescriptor;
    cudnnTensorDescriptor_t biasDescriptor;

@@ -28,6 +28,7 @@ public:
    cudnnHandle_t getCudnnHandle(){return cudnn_handle;}
    void query_device(int id);
    unsigned int getSeed(){return seed;}
+   int getTimestep(){return timestep;}
    //virtual int updateState(double timef, double dt);
 private:
    std::vector<BaseLayer*> layerList;

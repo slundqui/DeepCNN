@@ -9,7 +9,9 @@ set(MATIO_PATH ~/matio/build CACHE PATH "Location of matio library")
 set(CIMG_PATH ~/cimg/CImg-1.6.8_pre102815/ CACHE PATH "Location of cimg library")
 
 #Set output bin directory
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/)
 
 find_package(CUDA QUIET REQUIRED)
 
@@ -69,31 +71,52 @@ file(GLOB testLibSrc tests/*.[ch]pp)
 #   -lcudnn
 #)
 
-#Add compilation files to testing suite
-cuda_add_executable(
-   test
-   ${testLibSrc}
+#Add to library
+cuda_add_library(
+   deepcnn
    ${LibSrc}
 )
 
 #Add compilation files to testing suite
 cuda_add_executable(
-   cifar 
-   sims/cifar.cpp
-   ${LibSrc}
+   test
+   ${testLibSrc}
 )
 
 #Link libraries
 target_link_libraries(
    test
+   deepcnn
    -lcudnn
    -lgtest
    -lpthread
    -lmatio
 )
 
+#Add compilation files to testing suite
+cuda_add_executable(
+   cifar 
+   sims/cifar.cpp
+)
+
 target_link_libraries(
    cifar 
+   deepcnn
+   -lcudnn
+   -lgtest
+   -lpthread
+   -lmatio
+)
+
+#Add compilation files to testing suite
+cuda_add_executable(
+   cifarTest 
+   sims/cifarTest.cpp
+)
+
+target_link_libraries(
+   cifarTest
+   deepcnn
    -lcudnn
    -lgtest
    -lpthread

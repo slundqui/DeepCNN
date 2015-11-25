@@ -16,8 +16,6 @@ SoftmaxCost::SoftmaxCost()
    totalCostGridSize = 0;
    calcGradBlockSize = 0;
    calcGradGridSize = 0;
-   numCorrect = 0;
-   numTests = 0;
 }
 
 SoftmaxCost::~SoftmaxCost(){
@@ -26,10 +24,11 @@ SoftmaxCost::~SoftmaxCost(){
 int SoftmaxCost::setParams(Column* c, std::string layerName, 
       //std::string activationType,
       int in_writePeriod,
-      std::string in_outCostFile,
-      std::string in_outAccuracyFile){
+      std::string in_costFilename,
+      std::string in_accuracyFilename,
+      std::string in_estFilename){
    //Overwriting applyActivation to do softmax, so activation type here does not matter
-   return BaseCostFunction::setParams(c, layerName, "linear", in_writePeriod, in_outCostFile, in_outAccuracyFile);
+   return BaseCostFunction::setParams(c, layerName, "linear", in_writePeriod, in_costFilename, in_accuracyFilename, in_estFilename);
 }
 
 int SoftmaxCost::initialize(){
@@ -82,7 +81,12 @@ int SoftmaxCost::applyGradient(){
 int SoftmaxCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
+   float h_sumMe;
    softmaxTotalCost(truth, d_AData, batchcount, bSize, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
+   CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemcpy(&h_sumMe, d_TotalCost, sizeof(float), cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   sumCost += h_sumMe;
    return SUCCESS;
 }
 
@@ -97,10 +101,6 @@ int SoftmaxCost::calcGradient(){
 
 int SoftmaxCost::calcAccuracy(){
    //Get activity based on threshold
-   CudaError(cudaDeviceSynchronize());
-   float* d_GTData = col->getGroundTruthLayer()->getDeviceA();
-   CudaError(cudaMemcpy(h_estBuf, d_AData, gpuDataSize, cudaMemcpyDeviceToHost));
-   CudaError(cudaMemcpy(h_gtBuf, d_GTData, gpuDataSize, cudaMemcpyDeviceToHost));
    CudaError(cudaDeviceSynchronize());
    float tolerance = 1e-6;
 

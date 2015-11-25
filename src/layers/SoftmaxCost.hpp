@@ -21,8 +21,9 @@ public:
    virtual int setParams(Column* c, std::string layerName, 
          //std::string activationType,
          int writePeriod = 1,
-         std::string outCostFile = "",
-         std::string outAccuracyFile = "");
+         std::string costFilename = "",
+         std::string accuracyFilename = "",
+         std::string estFilename = "");
 
    virtual int calcTotalCost();
    virtual int calcGradient();

@@ -48,7 +48,12 @@ int LeastSquaresCost::allocate(){
 int LeastSquaresCost::calcTotalCost(){
    float* truth = col->getGroundTruthLayer()->getDeviceA();
    int batchcount = bSize * fSize * xSize * ySize;
+   float h_sumMe;
    leastSqTotalCost(truth, d_AData, batchcount, bSize, d_TotalCost, totalCostGridSize, totalCostBlockSize); 
+   CudaError(cudaDeviceSynchronize());
+   CudaError(cudaMemcpy(&h_sumMe, d_TotalCost, sizeof(float), cudaMemcpyDeviceToHost));
+   CudaError(cudaDeviceSynchronize());
+   sumCost += h_sumMe;
    return SUCCESS;
 }
 
@@ -63,12 +68,6 @@ int LeastSquaresCost::calcGradient(){
 }
 
 int LeastSquaresCost::calcAccuracy(){
-   //Get activity based on threshold
-   CudaError(cudaDeviceSynchronize());
-   float* d_GTData = col->getGroundTruthLayer()->getDeviceA();
-   CudaError(cudaMemcpy(h_estBuf, d_AData, gpuDataSize, cudaMemcpyDeviceToHost));
-   CudaError(cudaMemcpy(h_gtBuf, d_GTData, gpuDataSize, cudaMemcpyDeviceToHost));
-   CudaError(cudaDeviceSynchronize());
    float tolerance = 1e-6;
 
    int count = fSize * xSize * ySize;

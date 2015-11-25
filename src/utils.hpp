@@ -157,8 +157,9 @@ inline void readDataToDevice(std::string matFilename, float* d_data, int* nDims,
    }
 
    float *h_data = static_cast<float*>(matvar->data);
-   
+
    CudaError(cudaMemcpy(d_data, h_data, size, cudaMemcpyHostToDevice));
+   CudaError(cudaDeviceSynchronize());
    Mat_VarFree(matvar);
    Mat_Close(matfp);
 }

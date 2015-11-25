@@ -308,6 +308,57 @@ float* Convolution::getHostBGradient(){
    return h_outMem;
 }
 
+int Convolution::loadBias(std::string filename){
+   int nDims;
+   size_t * dims;
+   readDataToDevice(filename, d_Bias, &nDims, &dims);
+   if(nfp == 1){
+      assert(nDims == 1);
+      assert(dims[0] == (size_t)1);
+   }
+   else{
+      assert(nDims == 4);
+      assert(dims[0] == (size_t)1);
+      assert(dims[1] == (size_t)1);
+      assert(dims[2] == (size_t)1);
+      assert(dims[3] == (size_t)nfp);
+   }
+   return SUCCESS;
+}
+
+int Convolution::loadWeights(std::string filename){
+   int inNf = prevLayer->getFSize();
+   int nDims;
+   size_t * dims;
+   readDataToDevice(filename, d_WData, &nDims, &dims);
+   assert(nDims <= 4);
+   if(nDims >= 1){
+      assert(dims[0] == (size_t)nxp); //Fastest
+   }
+   else{
+      assert(nxp == 1);
+   }
+   if(nDims >= 2){
+      assert(dims[1] == (size_t)nyp);
+   }
+   else{
+      assert(nyp == 1);
+   }
+   if(nDims >=3){
+      assert(dims[2] == (size_t)inNf);
+   }
+   else{
+      assert(inNf == 1);
+   }
+   if(nDims >= 4){
+      assert(dims[3] == (size_t)nfp); //Slowest
+   }
+   else{
+      assert(nfp == 1);
+   }
+   return SUCCESS;
+}
+
 int Convolution::initializeWeights(){
    int inNf = prevLayer->getFSize();
    //Set d buffers
@@ -338,34 +389,7 @@ int Convolution::initializeWeights(){
       free(h_randArray);
    }
    else if(weightInitType == 2){ //Load weights
-      int nDims;
-      size_t * dims;
-      readDataToDevice(weightLoadFilename, d_WData, &nDims, &dims);
-      assert(nDims <= 4);
-      if(nDims >= 1){
-         assert(dims[0] == (size_t)nxp); //Fastest
-      }
-      else{
-         assert(nxp == 1);
-      }
-      if(nDims >= 2){
-         assert(dims[1] == (size_t)nyp);
-      }
-      else{
-         assert(nyp == 1);
-      }
-      if(nDims >=3){
-         assert(dims[2] == (size_t)inNf);
-      }
-      else{
-         assert(inNf == 1);
-      }
-      if(nDims >= 4){
-         assert(dims[3] == (size_t)nfp); //Slowest
-      }
-      else{
-         assert(nfp == 1);
-      }
+      loadWeights(weightLoadFilename);
    }
    else{
       std::cerr << "Weight init type of " << weightInitType << " not recognized\n";
@@ -400,11 +424,7 @@ int Convolution::initializeBias(){
       free(h_randArray);
    }
    else if(biasInitType == 2){ //load
-      int nDims;
-      size_t * dims;
-      readDataToDevice(biasLoadFilename, d_Bias, &nDims, &dims);
-      assert(nDims == 1);
-      assert(dims[0] == (size_t)nfp);
+      loadBias(biasLoadFilename);
    }
    else{
       std::cerr << "Bias init type of " << biasInitType << " not recognized\n";
@@ -610,6 +630,20 @@ void Convolution::printGB(){
    printMat(h_data, 1, nfp, 1, 1);
    free(h_data);
 }
+
+void Convolution::writeWeights(std::string outFilename){
+   //Matlab spins fastest to slowest
+   size_t array_dim[4] = {(size_t)nxp, (size_t)nyp, (size_t)prevLayer->getFSize(), (size_t)nfp};
+   writeDeviceData(outFilename, 4, array_dim, d_WData);
+}
+
+void Convolution::writeBias(std::string outFilename){
+   //Matlab spins fastest to slowest
+   size_t array_dim[4] = {(size_t)1, (size_t)1, (size_t)1, (size_t)nfp};
+   writeDeviceData(outFilename, 4, array_dim, d_Bias);
+}
+
+
 
 
 
