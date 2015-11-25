@@ -52,12 +52,12 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       if(empGrad != empGrad || actGrad != actGrad){
          passed = false;
          std::cout << "Weight nan\n";
-         return passed;
+         //return passed;
       }
       if(fabs(empGrad - actGrad) > tolerance){
          std::cout << "Weight Idx: " << weightIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
          passed = false;
-         return passed;
+         //return passed;
       }
 
       //Reset weight
@@ -95,12 +95,12 @@ bool gradientCheck(Column* myCol, Convolution* checkConn, MatInput* input, MatIn
       if(empGrad != empGrad || actGrad != actGrad){
          passed = false;
          std::cout << "Bias nan\n";
-         return passed;
+         //return passed;
       }
       if(fabs(empGrad - actGrad) > tolerance){
          std::cout << "Bias Idx: " << biasIdx << " EmpGrad: " << empGrad << " ActGrad: " << actGrad << "\n";
          passed = false;
-         return passed;
+         //return passed;
       }
 
       //Reset weight

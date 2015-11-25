@@ -141,6 +141,13 @@ int BaseCostFunction::updateHostData(){
 
 int BaseCostFunction::forwardUpdate(int timestep){
    Activation::forwardUpdate(timestep);
+
+   //timestep + 2 to keep stats until writePeriod
+   if((timestep + 2) % writePeriod == 0){
+      //reset counts
+      reset();
+   }
+
    updateHostData();
 
    calcTotalCost();
@@ -149,6 +156,7 @@ int BaseCostFunction::forwardUpdate(int timestep){
    if(estFilename != ""){
       writeEst();
    }
+   //timestep + 1 to skip timestep 0
    if((timestep+1) % writePeriod == 0){
       if(costFilename != ""){
          costFile << timestep << "," << getHostTotalCost() << std::endl;
@@ -157,8 +165,6 @@ int BaseCostFunction::forwardUpdate(int timestep){
          accuracyFile << timestep << "," << getHostAccuracy() << std::endl;
          std::cout << "Timestep: " << timestep << " accuracy " << getHostAccuracy() << "\n";
       }
-      //Reset counts
-      reset();
    }
 
    return SUCCESS;

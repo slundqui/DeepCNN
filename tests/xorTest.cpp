@@ -40,16 +40,16 @@ class xorTests: public ::testing::Test{
                          "fc1", //name
                          2, //nfp
                          1, //uniform random weights
-                         .1, //range of weights
+                         1, //range of weights
                          "", //filename, not used
-                         0, //uniform init of bias
-                         0, //initVal of bias
+                         1, //uniform init of bias
+                         1, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .1, //dw rate
-                         .2, //db rate
-                         .9, //dw momentum
-                         .9, //db momentum
+                         1, //dw rate
+                         2, //db rate
+                         .5, //dw momentum
+                         .5, //db momentum
                          0 //decay
                          );
 
@@ -62,15 +62,15 @@ class xorTests: public ::testing::Test{
          fc2->setParams(myCol, //column
                          "fc2", //name
                          1, //nfp
-                         .1, //uniform random weights
+                         1, //uniform random weights
                          1, //range of weights
                          "", //filename, not used
-                         0, //uniform init of bias
-                         0, //initVal of bias
+                         1, //uniform init of bias
+                         1, //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
-                         .1, //dw rate
-                         .2, //db rate
+                         1, //dw rate
+                         2, //db rate
                          .5, //dw momentum
                          .5, //db momentum
                          0 //decay
@@ -110,81 +110,8 @@ class xorTests: public ::testing::Test{
       int batch;
 };
 
-//TEST_F(xorTests, forwardPass){
-//   //Do not update weights but calculate gradients
-//   fc1->setGradientCheck();
-//   fc2->setGradientCheck();
-//
-//   myCol->initialize();
-//   myCol->run(1);
-//
-//   //float* h_inData = input->getHostA();
-//   //printMat(h_inData, 4, 1, 1, 2);
-//   //free(h_inData);
-//
-//   //h_inData = gt->getHostA(); //   //std::cout << "GT data : \n";
-//   //printMat(h_inData, 4, 1, 1, 1);
-//   //free(h_inData);
-//
-//   float* h_inData = hidden->getHostU();
-//   for(int i = 0; i < 8; i++){
-//      int ib = i / 2;
-//      if(ib == 0){
-//       ASSERT_FLOAT_EQ(h_inData[i], -.2);
-//      }
-//      else if(ib == 1 || ib == 2){
-//         ASSERT_FLOAT_EQ(h_inData[i], 0);
-//      }
-//      else if(ib == 3){
-//         ASSERT_FLOAT_EQ(h_inData[i], .2); //      }
-//   }
-//   free(h_inData);
-//
-//   h_inData = hidden->getHostA();
-//   for(int i = 0; i < 8; i++){
-//      int ib = i / 2;
-//      if(ib == 0){
-//       ASSERT_FLOAT_EQ(h_inData[i], -.19737533);
-//      }
-//      else if(ib == 1 || ib == 2){
-//         ASSERT_FLOAT_EQ(h_inData[i], 0);
-//      }
-//      else if(ib == 3){
-//         ASSERT_FLOAT_EQ(h_inData[i], .19737533);
-//      }
-//   }
-//   free(h_inData);
-//
-//   h_inData = cost->getHostA();
-//   for(int ib = 0; ib < 4; ib++){
-//      if(ib == 0){
-//       ASSERT_FLOAT_EQ(h_inData[ib], -.039475065);
-//      }
-//      else if(ib == 1 || ib == 2){
-//         ASSERT_FLOAT_EQ(h_inData[ib], 0);
-//      }
-//      else if(ib == 3){
-//         ASSERT_FLOAT_EQ(h_inData[ib], .039475065);
-//      }
-//   }
-//   free(h_inData);
-//
-//   const float* h_cost = cost->getHostTotalCost();
-//   for(int ib = 0; ib < 4; ib++){
-//      if(ib == 0){
-//         ASSERT_FLOAT_EQ(h_cost[ib], 0.46130407);
-//      }
-//      else if(ib == 1 || ib == 2){
-//         ASSERT_FLOAT_EQ(h_cost[ib], .5);
-//      }
-//      else if(ib == 3){
-//         ASSERT_FLOAT_EQ(h_cost[ib], .54025424);
-//      }
-//   }
-//}
-
 //This test calculates gradients emperically and compares them with backprop gradients
-TEST_F(xorTests, checkGradient){
+TEST_F(xorTests, xorCheckGradient){
    float tolerance = 10e-3;
    //Do not update weights but calculate gradients
    fc1->setGradientCheck();

@@ -39,10 +39,11 @@ class nandTests: public ::testing::Test{
                          "fc", //name
                          1, //nfp
                          0, //uniform init of weights
-                         .1, //initVal of weights
+                         1, //initVal of weights
                          "", //filename, not used
-                         0, //uniform init of bias
-                         0, //initVal of bias
+                         1, //uniform init of bias
+                         1,
+                         //initVal of bias
                          "", //filename, not used
                          1, //Plasticity is on
                          .1, //dw rate
@@ -81,7 +82,7 @@ class nandTests: public ::testing::Test{
 };
 
 //This test calculates gradients emperically and compares them with backprop gradients
-TEST_F(nandTests, checkGradient){
+TEST_F(nandTests, nandCheckGradient){
    float tolerance = 10e-3;
    //Do not update weights but calculate gradients
    fc->setGradientCheck();
@@ -96,7 +97,6 @@ TEST_F(nandTests, checkGradient){
    //Grab actual gradients calculated float* h_fc_weight_grad = fc->getHostWGradient();
    float* h_fc_weight_grad = fc->getHostWGradient();
    float* h_fc_bias_grad = fc->getHostBGradient();
-
    
    ////Check fc gradients
    EXPECT_TRUE(gradientCheck(myCol, fc, input, gt, cost, tolerance, h_fc_weight_grad, h_fc_bias_grad));

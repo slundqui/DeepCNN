@@ -95,12 +95,12 @@ target_link_libraries(
 
 #Add compilation files to testing suite
 cuda_add_executable(
-   cifar 
-   sims/cifar.cpp
+   trainCifar 
+   sims/trainCifar.cpp
 )
 
 target_link_libraries(
-   cifar 
+   trainCifar 
    deepcnn
    -lcudnn
    -lgtest
@@ -110,12 +110,12 @@ target_link_libraries(
 
 #Add compilation files to testing suite
 cuda_add_executable(
-   cifarTest 
-   sims/cifarTest.cpp
+   testCifar
+   sims/testCifar.cpp
 )
 
 target_link_libraries(
-   cifarTest
+   testCifar
    deepcnn
    -lcudnn
    -lgtest
