@@ -19,6 +19,14 @@ class mat_fileio: public ::testing::Test{
                                1, //features
                                "/home/sheng/workspace/DeepCNN/tests/testMats/idxcount_8x16x1x5.mat");//input mat
 
+         gt = new MatInput();
+         gt->setParams(myCol, //column name
+                               "input", //name
+                               16, //ny
+                               8, //nx
+                               1, //features
+                               "/home/sheng/workspace/DeepCNN/tests/testMats/idxcount_8x16x1x5.mat");//input mat
+
          conv = new Convolution();
          conv->setParams(myCol, //column
                          "conv", //name
@@ -38,16 +46,19 @@ class mat_fileio: public ::testing::Test{
          myCol->addLayer(input);
          myCol->addConn(conv);
          myCol->addLayer(testLayer);
+         myCol->addGroundTruth(gt);
       }
       virtual void TearDown(){
          delete myCol;
          delete input;
          delete testLayer;
          delete conv;
+         delete gt;
       }
 
       Column* myCol;
       MatInput* input;
+      MatInput* gt;
       BaseLayer* testLayer;
       Convolution* conv;
 };

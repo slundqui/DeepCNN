@@ -20,12 +20,12 @@ void writeConn(Convolution* conn, std::string weightsOutDir, int time){
 int main(void){
    int batch = 128;
    //Each inner run time is one time through the dataset
-   int numEpochs = 8; //Running for 100 epcohs
+   
    int epochTime = 400; //Each inner run time is one time through the dataset
    std::string weightsOutDir = "/home/sheng/workspace/DeepCNNData/cifar/out/weights/";
    
    Column* myCol = new Column(batch, //batch
-                      1292749337//seed
+                      289745937//seed
                       );
 
    MatInput* input= new MatInput();
@@ -41,7 +41,9 @@ int main(void){
                          1, //ny
                          1, //nx
                          10, //features
-                         "/home/sheng/workspace/DeepCNNData/cifar/formatted/trainLabels.mat");//list of images
+                         "/home/sheng/workspace/DeepCNNData/cifar/formatted/trainLabels.mat",//list of images
+                         true //shuffle
+         );
 
    Convolution* conv1 = new Convolution();
    conv1->setParams(myCol, //column
@@ -58,11 +60,11 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .001, //dw rate
-                   .002, //db rate
+                   .0001, //dw rate
+                   .0002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
-                   0.004 //decay
+                   0.0004 //decay
                    );
 
    Activation* conv1Buf = new Activation();
@@ -99,11 +101,11 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .001, //dw rate
-                   .002, //db rate
+                   .0001, //dw rate
+                   .0002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
-                   0.004 //decay
+                   0.0004 //decay
                    );
 
    Activation * conv2Buf = new Activation();
@@ -140,11 +142,11 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .001, //dw rate
-                   .002, //db rate
+                   .0001, //dw rate
+                   .0002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
-                   0.004 //decay
+                   0.0004 //decay
                    );
 
    Activation * conv3Buf = new Activation();
@@ -177,11 +179,11 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .001, //dw rate
-                   .002, //db rate
+                   .0001, //dw rate
+                   .0002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
-                   0.03 //decay
+                   0.003 //decay
                    );
 
    Activation * relu4 = new Activation();
@@ -200,19 +202,19 @@ int main(void){
                    0, //initVal of bias
                    "", //filename, not used
                    1, //Plasticity is on
-                   .001, //dw rate
-                   .002, //db rate
+                   .0001, //dw rate
+                   .0002, //db rate
                    0.9, //dw momentum
                    0.9, //db momentum
-                   0.03 //decay
+                   0.003 //decay
                    );
 
    SoftmaxCost* cost = new SoftmaxCost();
    cost->setParams(myCol,
                    "cost",
                    epochTime, //once per almost epoch through dataset
-                   "/home/sheng/workspace/DeepCNNData/cifar/out/totalCost.txt",
-                   "/home/sheng/workspace/DeepCNNData/cifar/out/accuracy.txt");
+                   "/home/sheng/workspace/DeepCNNData/cifar/out/train_totalCost.txt",
+                   "/home/sheng/workspace/DeepCNNData/cifar/out/train_accuracy.txt");
 
    myCol->addLayer(input);
    myCol->addConn(conv1);
@@ -247,6 +249,12 @@ int main(void){
    //std::cout << "GT A" << "\n";
    //gt->printA();
 
+   int iterationCount = 0;
+   int iterationMax = 40;
+
+   std::cout << "Running for 10 epochs\n";
+   
+   int numEpochs = 10; //Running for 100 epcohs
    for(int i = 0; i < numEpochs; i++){
       myCol->run(epochTime);
       writeConn(conv1, weightsOutDir, myCol->getTimestep());
@@ -254,8 +262,11 @@ int main(void){
       writeConn(conv3, weightsOutDir, myCol->getTimestep());
       writeConn(fc64, weightsOutDir, myCol->getTimestep());
       writeConn(fc10, weightsOutDir, myCol->getTimestep());
+      std::cout << "(" << ((float)100 * iterationCount)/iterationMax << "\%) Epoch " << iterationCount << " out of " << iterationMax << "\n";
+      iterationCount++;
    }
 
+   std::cout << "Reducing learning rate by 10 for 10 epochs\n";
    //Reduce learning rate by factor of 10 after 8 epochs
    conv1->setDwRate(conv1->getDwRate()/10);
    conv2->setDwRate(conv2->getDwRate()/10);
@@ -263,8 +274,14 @@ int main(void){
    fc64->setDwRate(fc64->getDwRate()/10);
    fc10->setDwRate(fc10->getDwRate()/10);
 
-   //Rerun for much longer
-   numEpochs = 50; //Running for 100 epcohs
+   conv1->setDbRate(conv1->getDbRate()/10);
+   conv2->setDbRate(conv2->getDbRate()/10);
+   conv3->setDbRate(conv3->getDbRate()/10);
+   fc64->setDbRate(fc64->getDbRate()/10);
+   fc10->setDbRate(fc10->getDbRate()/10);
+
+   //Rerun for longer
+   numEpochs = 10;
    for(int i = 0; i < numEpochs; i++){
       myCol->run(epochTime);
       writeConn(conv1, weightsOutDir, myCol->getTimestep());
@@ -272,6 +289,8 @@ int main(void){
       writeConn(conv3, weightsOutDir, myCol->getTimestep());
       writeConn(fc64, weightsOutDir, myCol->getTimestep());
       writeConn(fc10, weightsOutDir, myCol->getTimestep());
+      std::cout << "(" << ((float)100 * iterationCount)/iterationMax << "\%) Epoch " << iterationCount << " out of " << iterationMax << "\n";
+      iterationCount++;
    }
 
    //Reduce learning rate by factor of 10 
@@ -280,9 +299,15 @@ int main(void){
    conv3->setDwRate(conv3->getDwRate()/10);
    fc64->setDwRate(fc64->getDwRate()/10);
    fc10->setDwRate(fc10->getDwRate()/10);
+   conv1->setDbRate(conv1->getDbRate()/10);
+   conv2->setDbRate(conv2->getDbRate()/10);
+   conv3->setDbRate(conv3->getDbRate()/10);
+   fc64->setDbRate(fc64->getDbRate()/10);
+   fc10->setDbRate(fc10->getDbRate()/10);
 
+   std::cout << "Reducing learning rate by 10 for 10 epochs\n";
    //Rerun for much longer
-   numEpochs = 100; //Running for 100 epcohs
+   numEpochs = 10; //Running for 100 epcohs
    for(int i = 0; i < numEpochs; i++){
       myCol->run(epochTime);
       writeConn(conv1, weightsOutDir, myCol->getTimestep());
@@ -290,6 +315,8 @@ int main(void){
       writeConn(conv3, weightsOutDir, myCol->getTimestep());
       writeConn(fc64, weightsOutDir, myCol->getTimestep());
       writeConn(fc10, weightsOutDir, myCol->getTimestep());
+      std::cout << "(" << ((float)100 * iterationCount)/iterationMax << "\%) Epoch " << iterationCount << " out of " << iterationMax << "\n";
+      iterationCount++;
    }
 
    //Final reduction of learning rate
@@ -299,8 +326,16 @@ int main(void){
    fc64->setDwRate(fc64->getDwRate()/10);
    fc10->setDwRate(fc10->getDwRate()/10);
 
+   conv1->setDbRate(conv1->getDbRate()/10);
+   conv2->setDbRate(conv2->getDbRate()/10);
+   conv3->setDbRate(conv3->getDbRate()/10);
+   fc64->setDbRate(fc64->getDbRate()/10);
+   fc10->setDbRate(fc10->getDbRate()/10);
+
+
+   std::cout << "Reducing learning rate by 10 for 10 epochs\n";
    //Rerun for much longer
-   numEpochs = 100; //Running for 100 epcohs
+   numEpochs = 10; //Running for 100 epcohs
    for(int i = 0; i < numEpochs; i++){
       myCol->run(epochTime);
       writeConn(conv1, weightsOutDir, myCol->getTimestep());
@@ -308,6 +343,8 @@ int main(void){
       writeConn(conv3, weightsOutDir, myCol->getTimestep());
       writeConn(fc64, weightsOutDir, myCol->getTimestep());
       writeConn(fc10, weightsOutDir, myCol->getTimestep());
+      std::cout << "(" << ((float)100 * iterationCount)/iterationMax << "\%) Epoch " << iterationCount << " out of " << iterationMax << "\n";
+      iterationCount++;
    }
 }
 

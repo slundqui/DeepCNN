@@ -9,15 +9,17 @@
 #define COLUMN_HPP_ 
 #include "layers/BaseLayer.hpp"
 #include "connections/BaseConnection.hpp"
+#include "layers/MatInput.hpp"
 
+class MatInput;
 class Column{
 public:
    Column(int in_bSize, unsigned int in_seed = 1234567890);
    virtual ~Column();
    int addLayer(BaseLayer* inLayer);
    int addConn(BaseConnection* inConn);
-   int addGroundTruth(BaseLayer* inLayer);
-   BaseLayer* getGroundTruthLayer(){return groundTruthLayer;}
+   int addGroundTruth(MatInput* inLayer);
+   MatInput* getGroundTruthLayer(){return groundTruthLayer;}
    int getBSize(){return bSize;}
    //int getXSize(){return xSize;}
    //int getYSize(){return ySize;}
@@ -35,7 +37,7 @@ private:
    std::vector<BaseConnection*> connList;
 
    //Ground truth layer
-   BaseLayer* groundTruthLayer;
+   MatInput* groundTruthLayer;
 
    //Run list contains the order in which to achieve forward and backward passes
    std::vector<BaseData*> runList;

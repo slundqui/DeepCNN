@@ -50,7 +50,7 @@ Column::~Column(){
    CudnnError(cudnnDestroy((cudnnHandle_t)cudnn_handle));
 }
 
-int Column::addGroundTruth(BaseLayer* inLayer){
+int Column::addGroundTruth(MatInput* inLayer){
    assert(inLayer);
    if(!inLayer->isParamsSet()){
       std::cerr << "Error! Layer did not set parameters before trying to add layer to column\n";
@@ -119,6 +119,11 @@ int Column::addConn(BaseConnection* inConn){
 }
 
 int Column::initialize(){
+   if(groundTruthLayer){
+      groundTruthLayer->initialize();
+      groundTruthLayer->allocate();
+      totalGpuSize += groundTruthLayer->getGpuDataSize();
+   }
    for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
       (*it)->initialize();
    }
@@ -128,11 +133,6 @@ int Column::initialize(){
    }
    for(std::vector<BaseData*>::iterator it = runList.begin(); it != runList.end(); ++it){
       (*it)->allocate();
-   }
-   if(groundTruthLayer){
-      groundTruthLayer->initialize();
-      groundTruthLayer->allocate();
-      totalGpuSize += groundTruthLayer->getGpuDataSize();
    }
    return SUCCESS;
 }

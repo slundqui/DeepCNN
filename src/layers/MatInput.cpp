@@ -18,12 +18,15 @@ MatInput::~MatInput(){
    free(h_data);
 }
 
-int MatInput::setParams(Column* c, std::string layerName, int in_ySize, int in_xSize, int num_features, std::string in_name){
+int MatInput::setParams(Column* c, std::string layerName, int in_ySize, int in_xSize, int num_features, std::string in_name, bool in_shuffle){
    matFilename = in_name;
    ySize = in_ySize;
    xSize = in_xSize;
    fSize = num_features;
+   shuffle = in_shuffle;
+   
    matFilename = in_name; 
+   orderVector.clear();
    return BaseLayer::setParams(c, layerName);
 }
 
@@ -70,8 +73,34 @@ int MatInput::readMat(){
    return SUCCESS;
 }
 
+
+int seededRandom(int i){
+   return rand()%i;
+}
+
+int MatInput::shuffleOrder(){
+   //Ground truth drives, input follows
+   if(col->getGroundTruthLayer() == this){
+      if(shuffle){
+         //Shuffle index based on rand() call, which has already been seeded
+         std::random_shuffle(orderVector.begin(), orderVector.end(), seededRandom);
+      }
+   }
+   else{
+      orderVector = col->getGroundTruthLayer()->getOrderVector();
+   }
+   return SUCCESS;
+}
+
 int MatInput::initialize(){
    readMat();
+   //Make a vector of indices
+   for(int i=0; i < numExamples; i++){
+      orderVector.push_back(i);
+   }
+   //Make a permutation of matIdx
+   shuffleOrder();
+
    BaseLayer::initialize();
    return SUCCESS;
 }
@@ -88,14 +117,19 @@ int MatInput::allocate(){
 int MatInput::loadMatInput(){
    //Load into GPU memory
    int numVals = ySize * xSize * fSize;
+
    for(int bi = 0; bi < bSize; bi++){
+      int h_dataIdx = orderVector[exampleIdx];
+
       float * d_batchAData = &(d_AData[bi * numVals]);
-      float * h_batchAData = &(h_data[exampleIdx * numVals]);
+      float * h_batchAData = &(h_data[h_dataIdx * numVals]);
+      CudaError(cudaDeviceSynchronize());
       CudaError(cudaMemcpy(d_batchAData, h_batchAData, numVals*sizeof(float), cudaMemcpyHostToDevice));
       exampleIdx++;
       //If out of examples, reset
       if(exampleIdx >= numExamples){
          exampleIdx = 0;
+         shuffleOrder();
       }
    }
    return SUCCESS;
@@ -104,6 +138,12 @@ int MatInput::loadMatInput(){
 int MatInput::applyActivation(){
    //Does nothing, forward update takes care of things
    return SUCCESS;
+}
+
+int MatInput::getCurrentIdx(int batch){
+   //Example index has already been updated by this point, so get previous idxs
+   int prevExampleIdx = (exampleIdx - bSize + batch) % numExamples;
+   return orderVector[prevExampleIdx];
 }
 
 int MatInput::forwardUpdate(int timestep){

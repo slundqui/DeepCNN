@@ -123,3 +123,19 @@ target_link_libraries(
    -lmatio
 )
 
+#Add compilation files to testing suite
+cuda_add_executable(
+   testCifar_io
+   sims/testCifar_io.cpp
+)
+
+target_link_libraries(
+   testCifar_io
+   deepcnn
+   -lcudnn
+   -lgtest
+   -lpthread
+   -lmatio
+)
+
+

@@ -1,25 +1,55 @@
-basedir = '/home/sheng/workspace/DeepCNNData/xor';
-costFilename =    [basedir, '/totalCost.txt'];
+basedir = '/home/sheng/workspace/DeepCNNData/cifar/out/';
+
+trainCostFilename =    [basedir, '/train_totalCost.txt'];
+testCostFilename =    [basedir, '/test_totalCost.txt'];
 costOutfilename = [basedir, '/totalCost.png'];
 
-costFile = fopen(costFilename, 'r');
-if(costFile < 0)
-   disp(['Cost file ', costFile, ' does not exist']);
+trainCostFile = fopen(trainCostFilename, 'r');
+if(trainCostFile < 0)
+   disp(['Cost file ', trainCostFilename, ' does not exist']);
+   fflush(stdout);
    keyboard
 end
 
-timestep = [];
-cost = [];
-
-
-line = fgetl(costFile);
-while(ischar(line))
-   split = strsplit(line, ',');
-   timestep = [timestep, str2num(split{1})];
-   cost = [cost, str2num(split{2})];
-   line = fgetl(costFile);
+testCostFile = fopen(testCostFilename, 'r');
+if(testCostFile < 0)
+   disp(['Cost file ', testCostFilename, ' does not exist']);
+   fflush(stdout);
+   keyboard
 end
 
-h = plot(timestep, cost);
+trainTimestep = [];
+trainCost = [];
+testTimestep = [];
+testCost = [];
+
+line = fgetl(trainCostFile);
+while(ischar(line))
+   split = strsplit(line, ',');
+   trainTimestep = [trainTimestep, str2num(split{1})];
+   trainCost = [trainCost, str2num(split{2})];
+   line = fgetl(trainCostFile);
+end
+
+line = fgetl(testCostFile);
+while(ischar(line))
+   split = strsplit(line, ',');
+   testTimestep = [testTimestep, str2num(split{1})];
+   testCost = [testCost, str2num(split{2})];
+   line = fgetl(testCostFile);
+end
+
+h = figure;
+hold on
+plot(trainTimestep, trainCost, 'b', 'lineWidth', 5);
+plot(testTimestep, testCost, 'r', 'lineWidth', 5);
+hold off
+
+title('Energy vs timestep', 'FontSize', 28);
+xlabel('timestep', 'FontSize', 28);
+ylabel('Energy', 'FontSize', 28);
+
+l = legend('Train', 'Test');
+set(l, 'FontSize', 16);
+
 saveas(h, costOutfilename);
-   

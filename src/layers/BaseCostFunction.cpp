@@ -116,7 +116,12 @@ float BaseCostFunction::getAccuracy(){
 
 int BaseCostFunction::writeEst(){
    int count = xSize * ySize * fSize;
+   MatInput* gt = col->getGroundTruthLayer();
+
+
+
    for(int bi = 0; bi < bSize; bi++){
+      //Get max feature idx
       float maxGt = h_gtBuf[0];
       float maxEst = h_estBuf[0];
       int maxGtIdx = 0;
@@ -132,8 +137,11 @@ int BaseCostFunction::writeEst(){
             maxGtIdx = i;
          }
       }
-      //GT, Est, Confidence
-      estFile << maxGtIdx << "," << maxEstIdx << "," << maxEst << "\n";
+      //Get example index from gt layer that has shuffled array
+      int exampleIdx = gt->getCurrentIdx(bi);
+
+      //Idx, GT, Est, Confidence
+      estFile << exampleIdx << "," << maxGtIdx << "," << maxEstIdx << "," << maxEst << "\n";
    }
    return SUCCESS;
 }
@@ -155,8 +163,10 @@ int BaseCostFunction::forwardUpdate(int timestep){
       reset();
    }
 
+   //Move device est and gt activity to host
    updateHostData();
 
+   //Calculate costs and accuracy
    currCost = calcCost();
    currCorrect = calcCorrect();
    sumCost += currCost;

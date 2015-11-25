@@ -22,7 +22,7 @@ int main(void){
    //Each inner run time is one time through the dataset
    int epochTime = 400; //Each inner run time is one time through the dataset
 
-   std::string weightsInDir= "/home/sheng/workspace/DeepCNNData/cifar/out/weights/";
+   std::string weightsInDir= "/home/sheng/workspace/DeepCNNData/cifar/out/savedWeights/";
 
    int timePeriod = 400;
    
@@ -55,10 +55,10 @@ int main(void){
                    1, //xstride
                    2, //load weights
                    .0001, //not used
-                   weightsInDir + "conv1_time400_W.mat", //filename
+                   weightsInDir + "conv1_time6400_W.mat", //filename
                    2, //load bias
                    0, //initVal of bias
-                   weightsInDir + "conv1_time400_B.mat", //filename
+                   weightsInDir + "conv1_time6400_B.mat", //filename
                    0, //Plasticity is off
                    .001, //dw rate
                    .002, //db rate
@@ -96,10 +96,10 @@ int main(void){
                    1, //xstride
                    2, //load weights
                    .01, //range of weights
-                   weightsInDir + "conv2_time400_W.mat", //filename
+                   weightsInDir + "conv2_time6400_W.mat", //filename
                    2, //load bias
                    0, //initVal of bias
-                   weightsInDir + "conv2_time400_B.mat", //filename
+                   weightsInDir + "conv2_time6400_B.mat", //filename
                    0, //Plasticity is on
                    .001, //dw rate
                    .002, //db rate
@@ -137,10 +137,10 @@ int main(void){
                    1, //xstride
                    2, //init from file
                    .01, //range of weights
-                   weightsInDir + "conv3_time400_W.mat", //filename
+                   weightsInDir + "conv3_time6400_W.mat", //filename
                    2, //init from file
                    0, //initVal of bias
-                   weightsInDir + "conv3_time400_B.mat", //filename
+                   weightsInDir + "conv3_time6400_B.mat", //filename
                    0, //Plasticity is on
                    .001, //dw rate
                    .002, //db rate
@@ -174,10 +174,10 @@ int main(void){
                    64, //nfp
                    2, //init from file
                    .1, //range of weights
-                   weightsInDir + "fc64_time400_W.mat", //filename, not used
+                   weightsInDir + "fc64_time6400_W.mat", //filename, not used
                    2, //init from file
                    0, //initVal of bias
-                   weightsInDir + "fc64_time400_B.mat", //filename, not used
+                   weightsInDir + "fc64_time6400_B.mat", //filename, not used
                    0, //Plasticity is off
                    .001, //dw rate
                    .002, //db rate
@@ -197,10 +197,10 @@ int main(void){
                    10, //nfp
                    2, //init from file
                    .1, //range of weights
-                   weightsInDir + "fc10_time400_W.mat", //filename
+                   weightsInDir + "fc10_time6400_W.mat", //filename
                    2, //init from file
                    0, //initVal of bias
-                   weightsInDir + "fc10_time400_B.mat", //filename
+                   weightsInDir + "fc10_time6400_B.mat", //filename
                    0, //Plasticity is off
                    .001, //dw rate
                    .002, //db rate
@@ -214,8 +214,8 @@ int main(void){
                    "cost",
                    epochTime, //once per almost epoch through dataset
                    "/home/sheng/workspace/DeepCNNData/cifar/out/test_totalCost.txt", //cost file
-                   "/home/sheng/workspace/DeepCNNData/cifar/out/test_accuracy.txt"); //Cost accuracy
-                   //"/home/sheng/workspace/DeepCNNData/cifar/out/testEst_time400.txt"); //cost est file
+                   "/home/sheng/workspace/DeepCNNData/cifar/out/test_accuracy.txt", //Cost accuracy
+                   "/home/sheng/workspace/DeepCNNData/cifar/out/testEst_time6400.txt"); //cost est file
 
    myCol->addLayer(input);
    myCol->addConn(conv1);
@@ -238,18 +238,6 @@ int main(void){
 
    //Initialize network
    myCol->initialize();
-
-   int numEpochs = 40; //Running for 100 epcohs
-
-   //Run and write to mat file, TODO put this into layers
-   for(int i = 2; i < numEpochs; i++){
-      myCol->run(epochTime);
-      int time = (i) * timePeriod;
-      readConn(conv1, weightsInDir, time);
-      readConn(conv2, weightsInDir, time);
-      readConn(conv3, weightsInDir, time);
-      readConn(fc64, weightsInDir, time);
-      readConn(fc10, weightsInDir, time);
-   }
+   myCol->run(epochTime);
    
 }
